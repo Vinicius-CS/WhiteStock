@@ -1,0 +1,49 @@
+.index {
+    background-color: #1E1E1E;
+    color: #FFFFFF;
+}
+
+.indexContent {
+    margin-top: 6rem;
+    margin-bottom: 7rem;
+}
+
+.indexContent h1 {
+    font-size: 50px;
+}
+
+.indexContent h2 {
+    font-size: 30px;
+}
+
+.btn {
+    background-color: #FFFFFF;
+    color: #1E1E1E !important;
+    margin: 1rem;
+    margin-left: 0;
+}
+
+.btn_hover_0:hover {
+    background-color: #2D2D2D;
+    color: #FFFFFF !important;
+}
+
+.btn_hover_1:hover {
+    background-color: #1f1f1f;
+    color: #FFFFFF !important;
+}
+
+.card {
+    background-color: #2D2D2D;
+    color: #FFFFFF;
+    min-width: 15rem;
+    min-height: 10.5rem;
+}
+
+.cardPrice {
+    background-color: #2D2D2D;
+    color: #FFFFFF;
+    text-align: center;
+    min-width: 15rem;
+    min-height: 20rem;
+}
