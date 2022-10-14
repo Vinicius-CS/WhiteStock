@@ -1,6 +1,6 @@
 <template>
-  <div class="index">
-    <v-container v-if="this.$route.name != 'panel'">
+  <div class="index" v-if="this.$route.name != 'panel'">
+    <v-container>
       <v-row>
         <v-col
           class="indexContent"

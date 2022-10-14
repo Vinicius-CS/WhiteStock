@@ -1,6 +1,7 @@
 .index {
     background-color: #1E1E1E;
     color: #FFFFFF;
+    padding-bottom: 1rem;
 }
 
 .indexContent {
@@ -46,4 +47,16 @@
     text-align: center;
     min-width: 15rem;
     min-height: 20rem;
+}
+
+.footer {
+    position: absolute;
+    bottom: -5rem;
+    padding: 1vh;
+    height: 5rem;
+    width: 100%;
+    background-color: #2D2D2D;
+    text-align: center;
+    font-weight: bold;
+    color: #ffffff;
 }
