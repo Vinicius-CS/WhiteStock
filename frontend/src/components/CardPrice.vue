@@ -39,7 +39,12 @@
         </v-card-text>
 
         <v-card-actions class="justify-center">
-            <v-btn class="btn btn_hover_1" append-icon="mdi-cart">Assinar</v-btn>
+            <v-btn
+                class="btn btn_hover_1"
+                append-icon="mdi-cart"
+            >
+                Assinar
+            </v-btn>
         </v-card-actions>
     </v-card>
 </template>

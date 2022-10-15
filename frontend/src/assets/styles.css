@@ -24,6 +24,22 @@
     margin-left: 0;
 }
 
+@media only screen and (max-width: 524px) {
+    .btnEntrar {
+        background-color: #FFFFFF;
+        color: #1E1E1E !important;
+        margin: 0rem;
+    }
+}
+
+@media only screen and (min-width: 525px) {
+    .btnEntrar {
+        background-color: #FFFFFF;
+        color: #1E1E1E !important;
+        margin: 1rem;
+    }
+}
+
 .btn_hover_0:hover {
     background-color: #2D2D2D;
     color: #FFFFFF !important;
@@ -32,6 +48,14 @@
 .btn_hover_1:hover {
     background-color: #1f1f1f;
     color: #FFFFFF !important;
+}
+
+.cardLogin {
+    background-color: #2D2D2D;
+    color: #FFFFFF;
+    min-width: 15rem;
+    min-height: 10.5rem;
+    justify-content: end;
 }
 
 .card {

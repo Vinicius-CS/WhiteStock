@@ -1,17 +1,26 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import IndexPage from '@/views/Index.vue'
+import LoginPage from '@/views/Login.vue'
 import HomePanel from '@/views/panel/Home.vue'
 
 const routes = [
   {
     path: '/',
     name: 'index',
-    component: IndexPage
+    component: IndexPage,
+    meta: { title: 'White Stock' }
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: LoginPage,
+    meta: { title: 'White Stock - Entrar' }
   },
   {
     path: '/panel',
     name: 'panel',
-    component: HomePanel
+    component: HomePanel,
+    meta: { title: 'White Stock - Painel' }
   },
 ]
 

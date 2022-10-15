@@ -10,7 +10,21 @@
           <h2>Uma solução mais que completa</h2>
           <h2>para você gerenciar o seu estoque</h2>
 
-          <v-btn class="btn btn_hover_0" append-icon="mdi-chevron-double-right" onclick="document.getElementById('plan').scrollIntoView({behavior: 'smooth', block: 'start', inline: 'nearest'});">Começar Agora</v-btn>
+          <v-btn
+            class="btn btn_hover_0"
+            append-icon="mdi-chevron-double-right"
+            onclick="document.getElementById('plan').scrollIntoView({behavior: 'smooth', block: 'start', inline: 'nearest'});"
+          >
+            Começar agora
+          </v-btn>
+          OU
+          <v-btn
+            class="btnEntrar btn_hover_0"
+            append-icon="mdi-chevron-double-right"
+            to="/login"
+          >
+            Já tenho uma conta
+          </v-btn>
         </v-col>
       </v-row>
 
@@ -19,7 +33,11 @@
           v-for="(item, key) in cardInfo" :key="key"
           sm="4"
         >
-          <CardComponent :icon="item.icon" :title="item.title" :text="item.text"></CardComponent>
+          <CardComponent
+            :icon="item.icon"
+            :title="item.title"
+            :text="item.text"
+          ></CardComponent>
         </v-col>
       </v-row>
 
@@ -43,7 +61,16 @@
           v-for="(item, key) in cardPrice" :key="key"
           sm="4"
         >
-          <CardPrice :icon="item.icon" :title="item.title" :item="item.item" :priceMonth="item.priceMonth" :priceMonthYear="item.priceMonthYear" :priceYear="item.priceYear" :discountYear="item.discountYear" :discountActive="billingType"></CardPrice>
+          <CardPrice
+            :icon="item.icon"
+            :title="item.title"
+            :item="item.item"
+            :priceMonth="item.priceMonth"
+            :priceMonthYear="item.priceMonthYear"
+            :priceYear="item.priceYear"
+            :discountYear="item.discountYear"
+            :discountActive="billingType"
+          ></CardPrice>
         </v-col>
       </v-row>
     </v-container>
