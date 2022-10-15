@@ -4,7 +4,7 @@ import vuetify from './plugins/vuetify'
 import router from './router'
 import { loadFonts } from './plugins/webfontloader'
 
-loadFonts()
+loadFonts();
 
 const app = createApp(App);
 

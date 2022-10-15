@@ -15,13 +15,12 @@
 </template>
   
 <script>
+  export default {
+    name: 'HomePanel',
 
-export default {
-  name: 'HomePanel',
-
-  data: () => ({
-    //
-  }),
-}
+    data: () => ({
+      //
+    }),
+  }
 </script>
   

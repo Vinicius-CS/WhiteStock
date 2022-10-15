@@ -1,5 +1,5 @@
 <template>
-  <v-container v-if="this.$route.name == 'panel'">
+  <v-container v-if="this.$route.name != 'index'">
     <v-card>
       <v-navigation-drawer
         v-model="drawer"
@@ -29,23 +29,21 @@
       </v-navigation-drawer>
       <v-main></v-main>
     </v-card>
-    <router-view></router-view>
   </v-container>
 </template>
 
 <script>
+  export default {
+    name: 'MenuComponent',
 
-export default {
-  name: 'MenuComponent',
-
-  data: () => ({
-    drawer: true,
-    rail: false,
-    items: [
-      { title: 'Início', value: 'home', icon: 'mdi-home-city', to: '/panel' },
-      { title: 'My Account', value: 'account', icon: 'mdi-account', to: 'helloworld' },
-      { title: 'Users', value: 'users', icon: 'mdi-account-group-outline', to: 'none' },
-    ],
-  }),
-}
+    data: () => ({
+      drawer: true,
+      rail: false,
+      items: [
+        { title: 'Início', value: 'home', icon: 'mdi-home-city', to: '/panel' },
+        { title: 'My Account', value: 'account', icon: 'mdi-account', to: '/helloworld' },
+        { title: 'Users', value: 'users', icon: 'mdi-account-group-outline', to: '/helloworld' },
+      ],
+    }),
+  }
 </script>

@@ -1,5 +1,6 @@
 <template>
   <v-container>
+    <pre>{{this.$router}}</pre>
     <v-row class="text-center">
 
       <v-col class="mb-4">

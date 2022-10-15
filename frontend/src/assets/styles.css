@@ -50,6 +50,15 @@
     color: #FFFFFF !important;
 }
 
+.cardLoginHeader {
+    background-color: #1f1f1f;
+    color: #FFFFFF;
+    min-height: 3rem;
+    max-height: 5rem;
+    padding: 0.1rem;
+    margin-bottom: 1rem;
+}
+
 .cardLogin {
     background-color: #2D2D2D;
     color: #FFFFFF;
@@ -70,7 +79,7 @@
     color: #FFFFFF;
     text-align: center;
     min-width: 15rem;
-    min-height: 20rem;
+    min-height: 20.1rem;
 }
 
 .footer {

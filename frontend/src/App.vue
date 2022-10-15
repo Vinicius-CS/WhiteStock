@@ -9,21 +9,21 @@
 </template>
 
 <script>
-import IndexPage from '@/views/Index.vue'
-import FooterComponent from '@/components/FooterComponent.vue'
-import MenuComponent from '@/components/MenuComponent.vue'
+  import IndexPage from '@/views/Index.vue'
+  import FooterComponent from '@/components/FooterComponent.vue'
+  import MenuComponent from '@/components/MenuComponent.vue'
 
-export default {
-  name: 'App',
+  export default {
+    name: 'App',
 
-  components: {
-    IndexPage,
-    FooterComponent,
-    MenuComponent
-  },
+    components: {
+      IndexPage,
+      FooterComponent,
+      MenuComponent
+    },
 
-  data: () => ({
-    //
-  }),
-}
+    data: () => ({
+      //
+    }),
+  }
 </script>
