@@ -2,12 +2,13 @@
   <v-dialog
     v-model="show"
     max-width="40rem"
+    min-width="20rem"
     persistent
   >
     <v-card
-      class="cardLogin d-flex flex-column"
+      class="cardIndex d-flex flex-column"
     >
-      <v-layout class="cardLoginHeader d-flex flex-column">
+      <v-layout class="cardIndexHeader d-flex flex-column">
         <v-card-title style="text-align: center">
           <h2>Login</h2>
         </v-card-title>
@@ -23,8 +24,6 @@
       <v-card-text>
         <v-form
           ref="form"
-          v-model="valid"
-          lazy-validation
         >
           <v-text-field
             v-model="email"
@@ -60,17 +59,22 @@
 
 <script>
   export default {
+    name: 'LoginComponent',
+
     data: () => ({
-      email: '',
+      show    : false,
+      email   : '',
       password: ''
     }),
+    
     props: {
       value: Boolean
     },
+
     methods: {
-      closeDialog() {
+      closeDialog () {
         this.$emit('close');
-        this.email = '';
+        this.email    = '';
         this.password = '';
       },
     },

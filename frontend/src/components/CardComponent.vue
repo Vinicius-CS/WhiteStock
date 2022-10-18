@@ -24,10 +24,11 @@
 <script>
     export default {
         name: 'CardComponent',
+        
         props: {
-            title : String,
-            text  : String,
-            icon  : String
+            title: String,
+            text : String,
+            icon : String
         }
     }
 </script>

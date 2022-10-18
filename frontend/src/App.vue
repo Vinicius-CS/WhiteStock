@@ -1,10 +1,10 @@
 <template>
-  <v-app>
+  <v-app class="default">
     <v-main>
-      <IndexPage/>
-      <MenuComponent/>
-      <FooterComponent/>
+      <IndexPage v-if="this.$route.name == 'index'"/>
+      <MenuComponent v-if="this.$route.name != 'index'"/>
     </v-main>
+    <FooterComponent/>
   </v-app>
 </template>
 

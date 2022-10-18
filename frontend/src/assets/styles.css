@@ -1,19 +1,19 @@
-.index {
+.default {
     background-color: #1E1E1E;
     color: #FFFFFF;
     padding-bottom: 1rem;
 }
 
-.indexContent {
+.index {
     margin-top: 6rem;
     margin-bottom: 7rem;
 }
 
-.indexContent h1 {
+.index h1 {
     font-size: 50px;
 }
 
-.indexContent h2 {
+.index h2 {
     font-size: 30px;
 }
 
@@ -25,7 +25,7 @@
 }
 
 @media only screen and (max-width: 524px) {
-    .btnEntrar {
+    .btnLogin {
         background-color: #FFFFFF;
         color: #1E1E1E !important;
         margin: 0rem;
@@ -33,7 +33,7 @@
 }
 
 @media only screen and (min-width: 525px) {
-    .btnEntrar {
+    .btnLogin {
         background-color: #FFFFFF;
         color: #1E1E1E !important;
         margin: 1rem;
@@ -50,7 +50,7 @@
     color: #FFFFFF !important;
 }
 
-.cardLoginHeader {
+.cardIndexHeader {
     background-color: #1f1f1f;
     color: #FFFFFF;
     min-height: 3rem;
@@ -59,11 +59,12 @@
     margin-bottom: 1rem;
 }
 
-.cardLogin {
+.cardIndex {
     background-color: #2D2D2D;
     color: #FFFFFF;
     min-width: 15rem;
     min-height: 10.5rem;
+    width: unset;
     justify-content: end;
 }
 
@@ -82,9 +83,17 @@
     min-height: 20.1rem;
 }
 
+.errorMessage {
+    padding-top: 0.1rem;
+    padding-bottom: 1rem;
+    font-size: small;
+    text-transform: uppercase;
+}
+
 .footer {
     position: absolute;
     bottom: -5rem;
+    left: 0;
     padding: 1vh;
     height: 5rem;
     width: 100%;
@@ -92,4 +101,51 @@
     text-align: center;
     font-weight: bold;
     color: #ffffff;
+}
+
+/* PANEL */
+.content {
+    padding: 1vh;
+    padding-bottom: 2vh;
+    width: 100%;
+    background-color: #2D2D2D;
+    text-align: center;
+    font-size: xx-large;
+    color: #ffffff;
+}
+
+.header {
+    text-align: center;
+    font-weight: bold;
+    font-size: xx-large;
+    color: #ffffff;
+}
+
+.table {
+    margin-top: 2rem;
+    background-color: #3d3d3d;
+    text-align: center;
+    color: #ffffff;
+}
+
+.tableHeader {
+    background-color: #3d3d3d;
+    text-align: center;
+    font-size: large;
+    color: #ffffff;
+}
+
+.tableData {
+    background-color: #3d3d3d;
+    text-align: center;
+    color: #ffffff;
+}
+
+/* PANEL - HOME */
+.cardHomePanel {
+    background-color: #2D2D2D;
+    color: #FFFFFF;
+    text-align: center;
+    min-width: 15rem;
+    min-height: 10.5rem;
 }

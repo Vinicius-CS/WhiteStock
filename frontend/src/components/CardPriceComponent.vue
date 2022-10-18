@@ -42,9 +42,21 @@
             <v-btn
                 class="btn btn_hover_1"
                 append-icon="mdi-cart"
+                @click="showRegisterComponent = true"
             >
                 Assinar
             </v-btn>
+            <RegisterComponent
+                v-model="showRegisterComponent"
+                @close="showRegisterComponent = false"
+                :id="id"
+                :title="title"
+                :priceMonth="priceMonth"
+                :priceMonthYear="priceMonthYear"
+                :priceYear="priceYear"
+                :discountYear="discountYear"
+                :discountActive="discountActive"
+            />
         </v-card-actions>
     </v-card>
 </template>
@@ -54,17 +66,28 @@
 </style>
 
 <script>
+    import RegisterComponent from '@/components/RegisterComponent.vue'
+
     export default {
         name: 'CardPrice',
+
+        components: {
+            RegisterComponent
+        },
+        
         props: {
-            title          : String,
-            item           : Object,
-            icon           : String,
-            priceMonth     : String,
-            priceMonthYear : String,
-            priceYear      : String,
-            discountYear   : String,
-            discountActive : Boolean
-        }
+            id            : String,
+            title         : String,
+            item          : Object,
+            priceMonth    : String,
+            priceMonthYear: String,
+            priceYear     : String,
+            discountYear  : String,
+            discountActive: Boolean
+        },
+
+        data: () => ({
+            showRegisterComponent: false,
+        }),
     }
 </script>
