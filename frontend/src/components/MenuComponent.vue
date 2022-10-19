@@ -10,7 +10,7 @@
       >
         <v-list-item
           prepend-avatar="https://i.imgur.com/fibx3wL.png"
-          title="User"
+          title="White Stock"
           nav
         >
           <template v-slot:append>
@@ -30,9 +30,23 @@
 
         <template v-slot:append>
           <div class="pa-2">
-            <v-btn block class="btn">
+            <v-btn
+              v-if="!this.rail"
+              block
+              prepend-icon="mdi-logout"
+              class="btn"
+              to="/panel/logout"
+            >
               Sair
             </v-btn>
+
+            <v-btn
+              v-else
+              size="small"
+              icon="mdi-logout"
+              class="btn"
+              to="/panel/logout"
+            ></v-btn>
           </div>
         </template>
       </v-navigation-drawer>
@@ -95,7 +109,7 @@
           value: 'account',
           icon: 'mdi-account',
           to: '/panel/account'
-        },
+        }
       ],
     }),
   }

@@ -49,6 +49,7 @@
             <RegisterComponent
                 v-model="showRegisterComponent"
                 @close="showRegisterComponent = false"
+                @login="login"
                 :id="id"
                 :title="title"
                 :priceMonth="priceMonth"
@@ -87,7 +88,13 @@
         },
 
         data: () => ({
-            showRegisterComponent: false,
+            showRegisterComponent: false
         }),
+
+        methods: {
+            login (message, color) {
+                this.$emit('login', message, color);
+            }
+        }
     }
 </script>

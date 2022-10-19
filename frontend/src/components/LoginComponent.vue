@@ -21,6 +21,15 @@
         </v-icon>
       </v-layout>
 
+      <v-snackbar
+        v-model="errorSnackbar.model"
+        :timeout="5000"
+        color="red"
+        elevation="24"
+      >
+        {{ errorSnackbar.message }}
+      </v-snackbar>
+
       <v-card-text>
         <v-form
           ref="form"
@@ -43,6 +52,7 @@
             <v-btn
             class="btn btn_hover_1"
             append-icon="mdi-chevron-double-right"
+            @click="login"
             >
             Entrar
             </v-btn>
@@ -64,19 +74,59 @@
     data: () => ({
       show    : false,
       email   : '',
-      password: ''
+      password: '',
+
+      errorSnackbar: {
+        model: '',
+        message: ''
+      },
     }),
     
     props: {
-      value: Boolean
+      value       : Boolean
     },
 
     methods: {
       closeDialog () {
         this.$emit('close');
-        this.email    = '';
-        this.password = '';
+        this.email        = '';
+        this.password     = '';
       },
+
+      login () {
+        if (!this.email && !this.password) {
+          const axios = require('axios').default;
+          var data = require('qs').stringify({
+            email       : this.email,
+            password    : this.password
+          });
+
+          axios.post(`${Config.API_URL}/login`, data, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then(response => {
+            switch (response.status) {
+              case 200:
+                this.$emit('close');
+                break;
+            
+              case 401:
+                this.errorSnackbar.model = true;
+                this.errorSnackbar.message = 'Verifique os campos';
+                break;
+
+              case 500:
+                this.errorSnackbar.model = true;
+                this.errorSnackbar.message = 'Ocorreu um erro ao se registrar, tente novamente mais tarde';
+                break;
+            }
+
+          }).catch(err => {
+            if (err.message) {
+              this.errorMessageSnackbar = true;
+              this.errorMessage = 'Ocorreu um erro ao se cadastrar, tente novamente mais tarde';
+              console.log(err);
+            }
+          });
+        }
+      }
     },
   }
 </script>

@@ -22,12 +22,12 @@
       </v-layout>
 
       <v-snackbar
-        v-model="errorMessageSnackbar"
+        v-model="errorSnackbar.model"
         :timeout="5000"
         color="red"
         elevation="24"
       >
-        {{ errorMessage }}
+        {{ errorSnackbar.message }}
       </v-snackbar>
 
       <v-card-text>
@@ -122,10 +122,10 @@
 
           <div class="text-right">
             <v-btn
-              v-if="step"
+              v-if="this.step"
               class="btn btn_hover_1"
               append-icon="mdi-chevron-double-right"
-              @click="checkFileds"
+              @click="register"
             >
               Próximo
             </v-btn>
@@ -134,13 +134,13 @@
               v-else
               class="btn btn_hover_1"
               append-icon="mdi-chevron-double-left"
-              @click="step = true"
+              @click="this.step = true"
             >
               Anterior
             </v-btn>
 
             <v-btn
-              v-if="!step"
+              v-if="!this.step"
               class="btn btn_hover_1"
               append-icon="mdi-chevron-double-right"
               @click="register"
@@ -189,8 +189,11 @@
       expirateDate  : '',
       cardName      : '',
 
-      errorMessageSnackbar: false,
-      errorMessage        : '',
+      errorSnackbar: {
+        model: '',
+        message: ''
+      },
+
       nameCompanyError    : '',
       addressCompanyError : '',
       cnpjError           : '',
@@ -397,83 +400,62 @@
         if (!this.cardName) this.cardNameError = 'Insira o nome completo do titular';
       },
 
-      checkFileds () {
-        this.errorMessage = '';
-        
-        this.nameCompanyCheck();
-        this.addressCompanyCheck();
-        this.cnpjCheck();
-        this.emailCheck();
-        this.passwordCheck();
-
-        if (!this.nameCompanyError && !this.addressCompanyError && !this.cnpjError && !this.emailError && !this.passwordError) {
-          var axios = require('axios').default;
-          var data = require('qs').stringify({
-            acao    : 'validar_cnpj',
-            txt_cnpj: this.cnpj,
-          });
-
-          axios.post(`${Config.API_URL_CHECK}`, data).then(response => {
-            if (response.data.match(/Falso|Verdadeiro/gm)[0] == 'Falso') {
-              this.cnpjError = 'CNPJ inválido'
-            } else {
-              this.step = false;
-            }
-
-          }).catch(err => {
-            if (err.message) {
-              this.errorMessageSnackbar = true;
-              this.errorMessage = 'Ocorreu um erro ao verificar os campos, tente novamente mais tarde';
-              console.log(err);
-            }
-          });
-        }
-      },
-
       register () {
-        this.errorMessage = '';
+        if(this.step) {
+          this.nameCompanyCheck();
+          this.addressCompanyCheck();
+          this.cnpjCheck();
+          this.emailCheck();
+          this.passwordCheck();
 
-        this.cardNumberCheck();
-        this.cvvCheck();
-        this.expirateDateCheck();
-        this.cardNameCheck();
+          if (!this.nameCompanyError && !this.addressCompanyError && !this.cnpjError && !this.emailError && !this.passwordError) {
+            this.step = false;
+          }
 
-        if (!this.cardNumberError && !this.cvvError && !this.expirateDateError && !this.cardNameError) {
-          const axios = require('axios').default;
-          var data = require('qs').stringify({
-            email       : this.email,
-            password    : this.password,
-            cnpj        : this.cnpj,
-            name        : this.nameCompany,
-            address     : this.addressCompany,
-            plan        : this.id,
-            payment_type: this.discountActive ? 'year' : 'month'
-          });
+        } else {
+          this.cardNumberCheck();
+          this.cvvCheck();
+          this.expirateDateCheck();
+          this.cardNameCheck();
 
-          axios.post(`${Config.API_URL}/register`, data, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then(response => {
-            switch (response.status) {
-              case 200:
-                this.$emit('close');
-                break;
-            
-              case 401:
-                this.errorMessageSnackbar = true;
-                this.errorMessage = 'Verifique os campos';
-                break;
+          if (!this.cardNumberError && !this.cvvError && !this.expirateDateError && !this.cardNameError) {
+            const axios = require('axios').default;
+            var data = require('qs').stringify({
+              email       : this.email,
+              password    : this.password,
+              cnpj        : this.cnpj,
+              name        : this.nameCompany,
+              address     : this.addressCompany,
+              plan        : this.id,
+              payment_type: this.discountActive ? 'year' : 'month'
+            });
 
-              case 500:
-                this.errorMessageSnackbar = true;
-                this.errorMessage = 'Ocorreu um erro ao se registrar, tente novamente mais tarde';
-                break;
-            }
+            axios.post(`${Config.API_URL}/register`, data, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then(response => {
+              switch (response.status) {
+                case 200:
+                  this.$emit('login', 'Empresa registrada com sucesso', 'green');
+                  this.$emit('close');
+                  break;
+              
+                case 401:
+                  this.errorSnackbar.model = true;
+                  this.errorSnackbar.message = 'Verifique os campos';
+                  break;
 
-          }).catch(err => {
-            if (err.message) {
-              this.errorMessageSnackbar = true;
-              this.errorMessage = 'Ocorreu um erro ao se cadastrar, tente novamente mais tarde';
-              console.log(err);
-            }
-          });
+                case 500:
+                  this.errorSnackbar.model = true;
+                  this.errorSnackbar.message = 'Ocorreu um erro ao se registrar, tente novamente mais tarde';
+                  break;
+              }
+
+            }).catch(err => {
+              if (err.message) {
+                this.errorSnackbar.model = true;
+                this.errorSnackbar.message = 'Ocorreu um erro ao se cadastrar, tente novamente mais tarde';
+                console.log(err);
+              }
+            });
+          }
         }
       }
     },
