@@ -190,7 +190,7 @@
       cardName      : '',
 
       errorSnackbar: {
-        model: '',
+        model  : false,
         message: ''
       },
 
@@ -431,27 +431,22 @@
             });
 
             axios.post(`${Config.API_URL}/register`, data, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then(response => {
-              switch (response.status) {
-                case 200:
-                  this.$emit('login', 'Empresa registrada com sucesso', 'green');
-                  this.$emit('close');
-                  break;
-              
-                case 401:
-                  this.errorSnackbar.model = true;
-                  this.errorSnackbar.message = 'Verifique os campos';
-                  break;
-
-                case 500:
-                  this.errorSnackbar.model = true;
-                  this.errorSnackbar.message = 'Ocorreu um erro ao se registrar, tente novamente mais tarde';
-                  break;
+              if (response.status == 200) {
+                this.$emit('login', 'Empresa registrada com sucesso', 'green');
+                this.$emit('close');
+              } else {
+                this.errorSnackbar.message = 'Ocorreu um erro ao se cadastrar, tente novamente mais tarde';
+                this.errorSnackbar.model = true;
+                console.log(response);
               }
 
             }).catch(err => {
               if (err.message) {
-                this.errorSnackbar.model = true;
                 this.errorSnackbar.message = 'Ocorreu um erro ao se cadastrar, tente novamente mais tarde';
+              
+                if (err.response.data.message == 'Invalid Data') this.errorSnackbar.message = 'Verifique os campos';
+
+                this.errorSnackbar.model = true;
                 console.log(err);
               }
             });

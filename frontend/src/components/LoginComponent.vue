@@ -68,6 +68,9 @@
 </style>
 
 <script>
+  import Config from '@/assets/config.json';
+  import router from '@/router';
+
   export default {
     name: 'LoginComponent',
 
@@ -77,7 +80,7 @@
       password: '',
 
       errorSnackbar: {
-        model: '',
+        model  : false,
         message: ''
       },
     }),
@@ -94,37 +97,35 @@
       },
 
       login () {
-        if (!this.email && !this.password) {
+        if (this.email && this.password) {
           const axios = require('axios').default;
           var data = require('qs').stringify({
-            email       : this.email,
-            password    : this.password
+            email   : this.email,
+            password: this.password
           });
 
           axios.post(`${Config.API_URL}/login`, data, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then(response => {
-            switch (response.status) {
-              case 200:
-                this.$emit('close');
-                break;
-            
-              case 401:
-                this.errorSnackbar.model = true;
-                this.errorSnackbar.message = 'Verifique os campos';
-                break;
-
-              case 500:
-                this.errorSnackbar.model = true;
-                this.errorSnackbar.message = 'Ocorreu um erro ao se registrar, tente novamente mais tarde';
-                break;
+            if (response.status == 200 && response.data.message == 'Authenticated') {
+              router.push('/panel');
+            } else {
+              this.errorSnackbar.message = 'Ocorreu um erro ao entrar, tente novamente mais tarde';
+              this.errorSnackbar.model = true;
+              console.log(response);
             }
 
           }).catch(err => {
             if (err.message) {
-              this.errorMessageSnackbar = true;
-              this.errorMessage = 'Ocorreu um erro ao se cadastrar, tente novamente mais tarde';
+              this.errorSnackbar.message = 'Ocorreu um erro ao entrar, tente novamente mais tarde';
+              
+              if (err.response.data.message == 'Invalid Account') this.errorSnackbar.message = 'E-mail ou senha inválidos';
+
+              this.errorSnackbar.model = true;
               console.log(err);
             }
           });
+        } else {
+          this.errorSnackbar.message = 'Verifique os campos';
+          this.errorSnackbar.model = true;
         }
       }
     },

@@ -65,7 +65,7 @@ app.post(`${Config.PATH}/login`, (req, res, next) => {
           return res.status(500).send({ message: 'Server Error' });
         }
         
-        if (result.length <= 0) return res.status(401).send({ message: 'Invalid Password' });
+        if (result.length <= 0) return res.status(401).send({ message: 'Invalid Account' });
           
         var UserID = result[0]['id'];
         var PrivateKey = fs.readFileSync('./settings/private.key', 'utf8');
@@ -74,6 +74,8 @@ app.post(`${Config.PATH}/login`, (req, res, next) => {
           expiresIn: TOKEN_EXPIRES,
           algorithm: 'RS256'
         });
+
+        res.cookie('auth', Token);
 
         return res.status(200).send({ message: 'Authenticated', token: Token });
       });
