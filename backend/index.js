@@ -1,6 +1,5 @@
 const dotenv = require('dotenv-safe').config({ allowEmptyValues: true, example: './.env.example' });
 const htmlToText = require('nodemailer-html-to-text').htmlToText;
-const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
 const Config = require('./settings/config.json');
@@ -21,8 +20,7 @@ const db = mysql.createConnection({
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(cors({origin: '*'}));
-app.use(cookieParser());
+app.use(cors({ origin: '*' }));
 
 if (process.env.SERVER_PRODUCTION === 'FALSE') {
   TOKEN_EXPIRES = 86400;
@@ -43,8 +41,21 @@ function verifyJWT(req, res, next) {
   });
 }
 
-app.get(`${Config.PATH}/`, verifyJWT, (req, res, next) => {
-  return res.status(200).send({ message: 'Token Authorized' });
+function decodeJWT(token) {
+  var PublicKey = fs.readFileSync('./settings/public.key', 'utf8');
+  return jwt.decode(token, PublicKey, { algorithm: 'RS256' });
+}
+
+app.get(`${Config.PATH}/jwt`, verifyJWT, (req, res, next) => {
+  if (!req.headers['x-resource-token']) return res.status(401).send({ message: 'Token Verification Failed' });
+
+  var PublicKey = fs.readFileSync('./settings/public.key', 'utf8');
+  const decode = jwt.decode(req.headers['x-resource-token'], PublicKey, { algorithm: 'RS256' }, function (err, decoded) {
+    if (err) return res.status(500).send({ message: err });
+    else return res.status(200).send({ decoded });
+  });
+
+  return res.status(200).send({ decode });
 });
 
 app.post(`${Config.PATH}/login`, (req, res, next) => {
@@ -66,26 +77,39 @@ app.post(`${Config.PATH}/login`, (req, res, next) => {
         }
         
         if (result.length <= 0) return res.status(401).send({ message: 'Invalid Account' });
-          
-        var UserID = result[0]['id'];
+        
+        var id = result[0]['id'];
+        var email = result[0]['email'];
+        var cnpj = result[0]['cnpj'];
+        var name = result[0]['name'];
+        var address = result[0]['address'];
+        var photo = result[0]['photo'];
+        var plan = result[0]['plan'];
+        var payment_type = result[0]['payment_type'];
+        var enabled = result[0]['enabled'];
         var PrivateKey = fs.readFileSync('./settings/private.key', 'utf8');
 
-        var Token = jwt.sign({ UserID }, PrivateKey, {
+        var Token = jwt.sign({ id, email, cnpj, name, address, photo, plan, payment_type, enabled }, PrivateKey, {
           expiresIn: TOKEN_EXPIRES,
           algorithm: 'RS256'
         });
 
-        res.cookie('auth', Token);
-
-        return res.status(200).send({ message: 'Authenticated', token: Token });
+        return res.status(200).send({ message: 'Authenticated', token: Token, data: decodeJWT(Token) });
       });
 
     } else {
-      var UserID = result[0]['id'];
-      var CompanyID = result[0]['company_id'];
+      var id = result[0]['id'];
+      var email = result[0]['email'];
+      var cpf = result[0]['cnpj'];
+      var name = result[0]['name'];
+      var gender = result[0]['address'];
+      var photo = result[0]['photo'];
+      var role_id = result[0]['plan'];
+      var company_id = result[0]['payment_type'];
+      var enabled = result[0]['enabled'];
       var PrivateKey = fs.readFileSync('./settings/private.key', 'utf8');
 
-      var Token = jwt.sign({ UserID, CompanyID }, PrivateKey, {
+      var Token = jwt.sign({ id, email, cpf, name, gender, photo, role_id, company_id, enabled }, PrivateKey, {
         expiresIn: TOKEN_EXPIRES,
         algorithm: 'RS256'
       });
@@ -209,9 +233,9 @@ app.post(`${Config.PATH}/product`, verifyJWT, (req, res, next) => {
 /*-------------------- GET - LIST --------------------*/
 
 app.get(`${Config.PATH}/collaborator`, verifyJWT, (req, res, next) => {
-  if (!req.body.company_id) return res.status(401).send({ message: 'Invalid Data' });
+  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT collaborator.id, collaborator.email, collaborator.cpf, collaborator.name, collaborator.photo, collaborator.enabled, company.name FROM collaborator LEFT JOIN company ON company.id = collaborator.company_id WHERE collaborator.company_id = '${req.body.company_id}'`, function (err, result, fields) {
+  db.query(`SELECT collaborator.id, collaborator.email, collaborator.cpf, collaborator.name, collaborator.photo, collaborator.enabled, company.name AS comapny_name FROM collaborator LEFT JOIN company ON company.id = collaborator.company_id WHERE collaborator.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Collaborator List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error' });
@@ -223,9 +247,9 @@ app.get(`${Config.PATH}/collaborator`, verifyJWT, (req, res, next) => {
 });
 
 app.get(`${Config.PATH}/role`, verifyJWT, (req, res, next) => {
-  if (!req.body.company_id) return res.status(401).send({ message: 'Invalid Data' });
+  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT role.*, company.name FROM role LEFT JOIN company ON company.id = role.company_id WHERE role.company_id = '${req.body.company_id}'`, function (err, result, fields) {
+  db.query(`SELECT role.*, company.name FROM role LEFT JOIN company ON company.id = role.company_id WHERE role.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Company List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error' });
@@ -237,9 +261,9 @@ app.get(`${Config.PATH}/role`, verifyJWT, (req, res, next) => {
 });
 
 app.get(`${Config.PATH}/permission`, verifyJWT, (req, res, next) => {
-  if (!req.body.company_id) return res.status(401).send({ message: 'Invalid Data' });
+  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT permission.*, role.name, company.name FROM permission LEFT JOIN role ON role.company_id = permission.company_id LEFT JOIN company ON company.id = permission.company_id WHERE permission.company_id = '${req.body.company_id}'`, function (err, result, fields) {
+  db.query(`SELECT permission.*, role.name, company.name FROM permission LEFT JOIN role ON role.company_id = permission.company_id LEFT JOIN company ON company.id = permission.company_id WHERE permission.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Permission List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error' });
@@ -251,9 +275,9 @@ app.get(`${Config.PATH}/permission`, verifyJWT, (req, res, next) => {
 });
 
 app.get(`${Config.PATH}/category`, verifyJWT, (req, res, next) => {
-  if (!req.body.company_id) return res.status(401).send({ message: 'Invalid Data' });
+  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT product_category.*, company.name FROM product_category LEFT JOIN company ON company.id = product_category.company_id WHERE product_category.company_id = '${req.body.company_id}'`, function (err, result, fields) {
+  db.query(`SELECT product_category.*, company.name FROM product_category LEFT JOIN company ON company.id = product_category.company_id WHERE product_category.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Category List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error' });
@@ -265,9 +289,9 @@ app.get(`${Config.PATH}/category`, verifyJWT, (req, res, next) => {
 });
 
 app.get(`${Config.PATH}/product`, verifyJWT, (req, res, next) => {
-  if (!req.body.company_id) return res.status(401).send({ message: 'Invalid Data' });
+  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT product.*, company.name FROM product LEFT JOIN company ON company.id = product.company_id WHERE product.company_id = '${req.body.company_id}'`, function (err, result, fields) {
+  db.query(`SELECT product.*, company.name FROM product LEFT JOIN company ON company.id = product.company_id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Product List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error' });
@@ -278,5 +302,22 @@ app.get(`${Config.PATH}/product`, verifyJWT, (req, res, next) => {
   });
 });
 
+/*-------------------- DELETE --------------------*/
+
+app.post(`${Config.PATH}/delete/collaborator`, (req, res, next) => {
+  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
+
+  if (!req.body.id) return res.status(401).send({ message: 'Invalid Data' });
+
+  db.query(`DELETE FROM collaborator WHERE id = '${req.body.id}' AND company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
+    if (err) {
+      console.error({ info: `Error Collaborator Delete`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
+      return res.status(500).send({ message: 'Server Error' });
+    }
+
+    if (result.length <= 0) return res.status(204).send();
+    return res.status(200).send({ message: 'Deleted' });
+  });
+});
 var server = http.createServer(app).listen(process.env.SERVER_PORT);
 console.log(`API working on \'${Config.PROTOCOL}${Config.HOST}:${process.env.SERVER_PORT}${Config.PATH}\'\n\n✔ Server API`);

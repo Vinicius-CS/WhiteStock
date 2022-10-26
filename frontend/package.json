@@ -12,11 +12,14 @@
     "@mdi/font": "^7.0.96",
     "axios": "^1.1.2",
     "core-js": "^3.8.3",
+    "js-cookie": "^3.0.1",
     "roboto-fontface": "*",
     "vue": "^3.2.13",
+    "vue-jwt-decode": "^0.1.0",
     "vue-router": "^4.1.5",
     "vue-the-mask": "^0.11.1",
     "vuetify": "^3.0.0-beta.0",
+    "vuex": "^4.1.0",
     "webfontloader": "^1.0.0"
   },
   "devDependencies": {

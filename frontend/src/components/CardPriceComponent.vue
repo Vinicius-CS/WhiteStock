@@ -42,7 +42,7 @@
             <v-btn
                 class="btn btn_hover_1"
                 append-icon="mdi-cart"
-                @click="showRegisterComponent = true"
+                @click="checkLogged() ? goPanel() : showRegisterComponent = true"
             >
                 Assinar
             </v-btn>
@@ -67,7 +67,8 @@
 </style>
 
 <script>
-    import RegisterComponent from '@/components/RegisterComponent.vue'
+    import RegisterComponent from '@/components/RegisterComponent.vue';
+    import router from '@/router';
 
     export default {
         name: 'CardPrice',
@@ -94,6 +95,15 @@
         methods: {
             login (message, color) {
                 this.$emit('login', message, color);
+            },
+
+            checkLogged () {
+                if (this.$store.state.token != null) return true;
+                return false;
+            },
+
+            goPanel () {
+                router.push('/panel');
             }
         }
     }

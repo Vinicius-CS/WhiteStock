@@ -20,7 +20,7 @@
         <v-btn
           class="btnLogin btn_hover_0"
           append-icon="mdi-chevron-double-right"
-          @click="showLoginComponent = true"
+          @click="checkLogged() ? goPanel() : showLoginComponent = true"
         >
           Já tenho uma conta
         </v-btn>
@@ -94,6 +94,7 @@
   import LoginComponent from '@/components/LoginComponent.vue'
   import CardComponent from '@/components/CardComponent.vue'
   import CardPriceComponent from '@/components/CardPriceComponent.vue'
+  import router from '@/router';
 
   export default {
     name: 'IndexPage',
@@ -224,11 +225,21 @@
         this.messageSnackbar.message = message;
         this.messageSnackbar.color = color;
         this.showLoginComponent = true
+      },
+
+      checkLogged () {
+        if (this.$store.state.token != null) return true;
+        return false;
+      },
+
+      goPanel () {
+        router.push('/panel');
       }
     },
 
     beforeMount() {
-      if (window.location.hash == '#login') this.showLoginComponent = true;
+      if (window.location.hash == '#login' && this.$store.state.token != null) router.push('/panel');
+      else if (window.location.hash == '#login') this.showLoginComponent = true;
     }
   }
 </script>

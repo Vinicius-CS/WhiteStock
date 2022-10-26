@@ -69,6 +69,7 @@
 
 <script>
   import Config from '@/assets/config.json';
+  import VueJwtDecode from 'vue-jwt-decode';
   import router from '@/router';
 
   export default {
@@ -86,14 +87,14 @@
     }),
     
     props: {
-      value       : Boolean
+      value: Boolean
     },
 
     methods: {
       closeDialog () {
         this.$emit('close');
-        this.email        = '';
-        this.password     = '';
+        this.email    = '';
+        this.password = '';
       },
 
       login () {
@@ -106,7 +107,11 @@
 
           axios.post(`${Config.API_URL}/login`, data, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then(response => {
             if (response.status == 200 && response.data.message == 'Authenticated') {
+              console.log(VueJwtDecode.decode(response.data.token).name);
+              this.$store.commit('setToken', response.data.token);
+
               router.push('/panel');
+
             } else {
               this.errorSnackbar.message = 'Ocorreu um erro ao entrar, tente novamente mais tarde';
               this.errorSnackbar.model = true;

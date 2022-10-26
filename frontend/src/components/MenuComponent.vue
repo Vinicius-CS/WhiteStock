@@ -9,8 +9,8 @@
         style="background-color: #2D2D2D; color: #FFFFFF;"
       >
         <v-list-item
-          prepend-avatar="https://i.imgur.com/fibx3wL.png"
-          title="White Stock"
+          :prepend-avatar="this.data.photo ?? 'https://i.imgur.com/fibx3wL.png'"
+          :title="this.data.name"
           nav
         >
           <template v-slot:append>
@@ -35,7 +35,7 @@
               block
               prepend-icon="mdi-logout"
               class="btn"
-              to="/panel/logout"
+              @click="logout"
             >
               Sair
             </v-btn>
@@ -45,7 +45,7 @@
               size="small"
               icon="mdi-logout"
               class="btn"
-              to="/panel/logout"
+              @click="logout"
             ></v-btn>
           </div>
         </template>
@@ -60,12 +60,31 @@
 </style>
 
 <script>
+  import VueJwtDecode from 'vue-jwt-decode';
+  import router from '@/router';
+  
   export default {
     name: 'MenuComponent',
 
     data: () => ({
       drawer: true,
       rail  : false,
+
+      data: {
+        id          : undefined,
+        email       : undefined,
+        cnpj        : undefined,
+        cpf         : undefined,
+        name        : undefined,
+        address     : undefined,
+        gender      : undefined,
+        photo       : undefined,
+        plan        : undefined,
+        role_id     : undefined,
+        payment_type: undefined,
+        company_id  : undefined,
+        enabled     : undefined
+      },
 
       items: [
         {
@@ -98,12 +117,12 @@
           icon: 'mdi-office-building',
           to: '/panel/company'
         },
-        {
+        /*{
           title: 'Subsidiárias',
           value: 'subsidiary',
           icon: 'mdi-store',
           to: '/panel/subsidiary'
-        },
+        },*/
         {
           title: 'Minha Conta',
           value: 'account',
@@ -112,5 +131,20 @@
         }
       ],
     }),
+
+    methods: {
+      logout() {
+        this.$store.commit('removeToken');
+        router.push('/');
+      }
+    },
+
+    beforeMount() {
+      if (this.$store.state.token == null) {
+        router.push('/');
+      } else {
+        this.data = VueJwtDecode.decode(this.$store.state.token);
+      }
+    }
   }
 </script>

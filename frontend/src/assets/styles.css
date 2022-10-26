@@ -50,6 +50,16 @@
     color: #FFFFFF !important;
 }
 
+.btn_hover_red:hover {
+    background-color: #940000;
+    color: #FFFFFF !important;
+}
+
+.btn_hover_green:hover {
+    background-color: #059400;
+    color: #FFFFFF !important;
+}
+
 .cardIndexHeader {
     background-color: #1f1f1f;
     color: #FFFFFF;

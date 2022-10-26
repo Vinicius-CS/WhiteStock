@@ -20,10 +20,6 @@
       IndexPage,
       FooterComponent,
       MenuComponent
-    },
-
-    data: () => ({
-      //
-    }),
+    }
   }
 </script>
