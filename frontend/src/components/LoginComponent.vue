@@ -1,6 +1,5 @@
 <template>
   <v-dialog
-    v-model="show"
     max-width="40rem"
     min-width="20rem"
     persistent
@@ -38,6 +37,7 @@
             v-model="email"
             label="E-Mail"
             type="email"
+            @input="this.email = this.email.toLowerCase()"
             prepend-icon="mdi-account"
           ></v-text-field>
 
@@ -69,32 +69,26 @@
 
 <script>
   import Config from '@/assets/config.json';
-  import VueJwtDecode from 'vue-jwt-decode';
   import router from '@/router';
 
   export default {
     name: 'LoginComponent',
 
     data: () => ({
-      show    : false,
-      email   : '',
-      password: '',
+      email   : undefined,
+      password: undefined,
 
       errorSnackbar: {
         model  : false,
-        message: ''
+        message: undefined
       },
     }),
-    
-    props: {
-      value: Boolean
-    },
 
     methods: {
       closeDialog () {
         this.$emit('close');
-        this.email    = '';
-        this.password = '';
+        this.email    = undefined;
+        this.password = undefined;
       },
 
       login () {
@@ -107,29 +101,26 @@
 
           axios.post(`${Config.API_URL}/login`, data, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then(response => {
             if (response.status == 200 && response.data.message == 'Authenticated') {
-              console.log(VueJwtDecode.decode(response.data.token).name);
+              this.closeDialog();
               this.$store.commit('setToken', response.data.token);
-
               router.push('/panel');
 
-            } else {
-              this.errorSnackbar.message = 'Ocorreu um erro ao entrar, tente novamente mais tarde';
-              this.errorSnackbar.model = true;
-              console.log(response);
             }
 
           }).catch(err => {
             if (err.message) {
               this.errorSnackbar.message = 'Ocorreu um erro ao entrar, tente novamente mais tarde';
+              console.log(err.response.data.message);
               
               if (err.response.data.message == 'Invalid Account') this.errorSnackbar.message = 'E-mail ou senha inválidos';
+              if (err.response.data.message == 'Disabled Account') this.errorSnackbar.message = 'Esta conta está desabilitada';
 
               this.errorSnackbar.model = true;
               console.log(err);
             }
           });
         } else {
-          this.errorSnackbar.message = 'Verifique os campos';
+          this.errorSnackbar.message = 'Preencha todos os campos';
           this.errorSnackbar.model = true;
         }
       }

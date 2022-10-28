@@ -1,5 +1,5 @@
 <template>
-  <v-container v-if="this.$route.name != 'index'">
+  <v-container v-if="this.$store.state.token != null && this.$route.name != 'index'">
     <v-card style="z-index: 1;">
       <v-navigation-drawer
         v-model="drawer"
@@ -9,8 +9,8 @@
         style="background-color: #2D2D2D; color: #FFFFFF;"
       >
         <v-list-item
-          :prepend-avatar="this.data.photo ?? 'https://i.imgur.com/fibx3wL.png'"
-          :title="this.data.name"
+          :prepend-avatar="this.$store.getters.userData.photo ?? 'https://i.imgur.com/fibx3wL.png'"
+          :title="this.$store.getters.userData.name"
           nav
         >
           <template v-slot:append>
@@ -25,7 +25,16 @@
         <v-divider></v-divider>
 
         <v-list density="compact" nav>
-          <v-list-item v-for="(item, key) in items" :key="key" :prepend-icon="item.icon" :title="item.title" :value="item.value" :to="item.to"></v-list-item>
+          <div v-for="(item, key) in items" :key="key">
+            <v-list-item
+              style="margin-bottom: 0.3rem"
+              v-if="item.id == undefined || this.$store.getters.hasPermission(item.id, 'view')"
+              :prepend-icon="item.icon"
+              :title="item.title"
+              :value="item.value"
+              :to="item.to"
+            />
+          </div>
         </v-list>
 
         <template v-slot:append>
@@ -60,7 +69,6 @@
 </style>
 
 <script>
-  import VueJwtDecode from 'vue-jwt-decode';
   import router from '@/router';
   
   export default {
@@ -70,64 +78,53 @@
       drawer: true,
       rail  : false,
 
-      data: {
-        id          : undefined,
-        email       : undefined,
-        cnpj        : undefined,
-        cpf         : undefined,
-        name        : undefined,
-        address     : undefined,
-        gender      : undefined,
-        photo       : undefined,
-        plan        : undefined,
-        role_id     : undefined,
-        payment_type: undefined,
-        company_id  : undefined,
-        enabled     : undefined
-      },
-
       items: [
         {
           title: 'Início',
           value: 'home',
-          icon: 'mdi-home',
-          to: '/panel'
+          icon : 'mdi-home',
+          to   : '/panel'
         },
         {
+          id   : 'collaborator',
           title: 'Colaboradores',
           value: 'collaborator',
-          icon: 'mdi-account-multiple',
-          to: '/panel/collaborator'
+          icon : 'mdi-account-multiple',
+          to   : '/panel/collaborator'
         },
         {
+          id   : 'product',
           title: 'Produtos',
           value: 'product',
-          icon: 'mdi-package-variant-closed',
-          to: '/panel/product'
+          icon : 'mdi-package-variant-closed',
+          to   : '/panel/product'
         },
         {
+          id   : 'category',
           title: 'Categorias de Produtos',
           value: 'product-category',
-          icon: 'mdi-clipboard-text',
-          to: '/panel/product-category'
+          icon : 'mdi-clipboard-text',
+          to   : '/panel/product-category'
         },
         {
+          id   : 'company',
           title: 'Empresa',
           value: 'company',
-          icon: 'mdi-office-building',
-          to: '/panel/company'
+          icon : 'mdi-office-building',
+          to   : '/panel/company'
         },
         /*{
+          id   : 'subsidiary',
           title: 'Subsidiárias',
           value: 'subsidiary',
-          icon: 'mdi-store',
-          to: '/panel/subsidiary'
+          icon : 'mdi-store',
+          to   : '/panel/subsidiary'
         },*/
         {
           title: 'Minha Conta',
           value: 'account',
-          icon: 'mdi-account',
-          to: '/panel/account'
+          icon : 'mdi-account',
+          to   : '/panel/account'
         }
       ],
     }),
@@ -136,14 +133,12 @@
       logout() {
         this.$store.commit('removeToken');
         router.push('/');
-      }
+      },
     },
 
-    beforeMount() {
+    mounted () {
       if (this.$store.state.token == null) {
         router.push('/');
-      } else {
-        this.data = VueJwtDecode.decode(this.$store.state.token);
       }
     }
   }

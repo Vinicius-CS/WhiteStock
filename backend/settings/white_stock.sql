@@ -38,26 +38,6 @@ CREATE TABLE IF NOT EXISTS plan_resource (
   FOREIGN KEY (resource_id) REFERENCES resource(id)
 );
 
-CREATE TABLE IF NOT EXISTS role (
-  id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL UNIQUE,
-  description VARCHAR(255) NOT NULL,
-  company_id INT(11) NOT NULL,
-  enabled ENUM('true','false') NOT NULL DEFAULT 'true',
-  FOREIGN KEY (company_id) REFERENCES company(id)
-);
-
-CREATE TABLE IF NOT EXISTS permission (
-  id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL UNIQUE,
-  description VARCHAR(255) NOT NULL,
-  role_id INT(11) NOT NULL,
-  company_id INT(11) NOT NULL,
-  enabled ENUM('true','false') NOT NULL DEFAULT 'true',
-  FOREIGN KEY (role_id) REFERENCES role(id),
-  FOREIGN KEY (company_id) REFERENCES company(id)
-);
-
 CREATE TABLE IF NOT EXISTS collaborator (
   id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   email VARCHAR(255) NOT NULL UNIQUE,
@@ -66,10 +46,9 @@ CREATE TABLE IF NOT EXISTS collaborator (
   name VARCHAR(255) NOT NULL,
   gender ENUM('female','male') NOT NULL,
   photo VARCHAR(255) NOT NULL,
-  role_id INT(11) NOT NULL,
   company_id INT(11) NOT NULL,
   enabled ENUM('true','false') NOT NULL DEFAULT 'true',
-  FOREIGN KEY (role_id) REFERENCES role(id),
+  permission JSON NOT NULL DEFAULT '{"collaborator":{"view":"0","add":"0","edit":"0","delete":"0"},"product":{"view":"0","add":"0","edit":"0","delete":"0"},"category":{"view":"0","add":"0","edit":"0","delete":"0"},"company":{"view":"0","add":"0","edit":"0","delete":"0"}}',
   FOREIGN KEY (company_id) REFERENCES company(id)
 );
 

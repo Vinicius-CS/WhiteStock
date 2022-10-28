@@ -1,6 +1,5 @@
 <template>
   <v-dialog
-    v-model="show"
     max-width="40rem"
     min-width="20rem"
     persistent
@@ -12,13 +11,6 @@
         <v-card-title style="text-align: center">
           <h2>{{ title }}</h2>
         </v-card-title>
-        <v-icon
-          style="position: absolute; right: 1rem; top: 25%;"
-          @click="closeDialog"
-          large
-        >
-          mdi-close-circle
-        </v-icon>
       </v-layout>
 
       <v-card-text>
@@ -34,7 +26,7 @@
           <v-btn
             class="btn btn_hover_green"
             append-icon="mdi-check-bold"
-            @click="yesDialog"
+            @click="confirmDialog"
             >
             Sim
           </v-btn>
@@ -49,16 +41,10 @@
 </style>
 
 <script>
-
   export default {
     name: 'ConfirmComponent',
-
-    data: () => ({
-      show: false,
-    }),
     
     props: {
-      value: Boolean,
       title: String,
       text : String,
       textLoading: String,
@@ -69,8 +55,8 @@
         this.$emit('close');
       },
 
-      yesDialog () {
-        this.$emit('yes');
+      confirmDialog () {
+        this.$emit('confirm');
       },
     }
   }

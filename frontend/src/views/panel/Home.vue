@@ -37,11 +37,7 @@
   
 <script>
   export default {
-    name: 'HomePanel',
-
-    data: () => ({
-      //
-    }),
+    name: 'HomePanel'
   }
 </script>
   

@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container v-show="this.$route.name == 'index'">
     <v-row>
       <v-col
         class="index"

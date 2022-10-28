@@ -50,6 +50,7 @@
                 v-model="showRegisterComponent"
                 @close="showRegisterComponent = false"
                 @login="login"
+                :show="showRegisterComponent"
                 :id="id"
                 :title="title"
                 :priceMonth="priceMonth"

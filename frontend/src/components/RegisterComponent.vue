@@ -1,6 +1,5 @@
 <template>
   <v-dialog
-    v-model="show"
     max-width="40rem"
     min-width="20rem"
     persistent
@@ -11,6 +10,7 @@
       <v-layout class="cardIndexHeader d-flex flex-column">
         <v-card-title style="text-align: center">
           <h2>Assinatura</h2>
+          <h3>{{ this.step ? 'Dados da Empresa' : 'Dados de Pagamento' }}</h3>
         </v-card-title>
         <v-icon
           style="position: absolute; right: 1rem; top: 25%"
@@ -41,6 +41,7 @@
               v-model="nameCompany"
               label="Nome da Empresa"
               hide-details
+              @input="this.nameCompany = this.nameCompany.toUpperCase()"
             ></v-text-field>
             <div class="errorMessage">{{ this.nameCompanyError }}</div>
 
@@ -48,6 +49,7 @@
               v-model="addressCompany"
               label="Endereço da Matriz"
               hide-details
+              @input="this.addressCompany = this.addressCompany.toUpperCase()"
             ></v-text-field>
             <div class="errorMessage">{{ this.addressCompanyError }}</div>
 
@@ -66,6 +68,7 @@
                   label="E-Mail"
                   hide-details
                   type="email"
+                  @input="this.email = this.email.toLowerCase()"
                 ></v-text-field>
                 <div class="errorMessage">{{ this.emailError }}</div>
               </v-col>
@@ -116,6 +119,7 @@
               v-model="cardName"
               label="Nome Completo do Titular"
               hide-details
+              @input="this.cardName = this.cardName.toUpperCase()"
             ></v-text-field>
             <div class="errorMessage">{{ this.cardNameError }}</div>
           </div>
@@ -123,7 +127,7 @@
           <div class="text-right">
             <v-btn
               v-if="this.step"
-              class="btn btn_hover_1"
+              class="btn btn_hover_0"
               append-icon="mdi-chevron-double-right"
               @click="register"
             >
@@ -132,7 +136,7 @@
 
             <v-btn
               v-else
-              class="btn btn_hover_1"
+              class="btn btn_hover_0"
               append-icon="mdi-chevron-double-left"
               @click="this.step = true"
             >
@@ -141,7 +145,7 @@
 
             <v-btn
               v-if="!this.step"
-              class="btn btn_hover_1"
+              class="btn btn_hover_0"
               append-icon="mdi-chevron-double-right"
               @click="register"
             >
@@ -165,7 +169,7 @@
     name: 'RegisterComponent',
 
     props: {
-      value          : Boolean,
+      show           : Boolean,
       id             : String,
       title          : String,
       item           : Object,
@@ -178,134 +182,97 @@
 
     data: () => ({
       step          : true,
-      show          : false,
-      nameCompany   : '',
-      addressCompany: '',
-      cnpj          : '',
-      email         : '',
-      password      : '',
-      cardNumber    : '',
-      cvv           : '',
-      expirateDate  : '',
-      cardName      : '',
+      nameCompany   : undefined,
+      addressCompany: undefined,
+      cnpj          : undefined,
+      email         : undefined,
+      password      : undefined,
+      cardNumber    : undefined,
+      cvv           : undefined,
+      expirateDate  : undefined,
+      cardName      : undefined,
 
       errorSnackbar: {
         model  : false,
-        message: ''
+        message: undefined
       },
 
-      nameCompanyError    : '',
-      addressCompanyError : '',
-      cnpjError           : '',
-      emailError          : '',
-      passwordError       : '',
-      cardNumberError     : '',
-      cvvError            : '',
-      expirateDateError   : '',
-      cardNameError       : '',
+      nameCompanyError    : undefined,
+      addressCompanyError : undefined,
+      cnpjError           : undefined,
+      emailError          : undefined,
+      passwordError       : undefined,
+      cardNumberError     : undefined,
+      cvvError            : undefined,
+      expirateDateError   : undefined,
+      cardNameError       : undefined,
     }),
 
     watch: {
-      nameCompany (value) {
-        this.nameCompanyError = '';
-        if (!value) this.nameCompanyError = 'Insira o nome da empresa';
+      show () {
+        this.errorMessage        = undefined;
+        this.nameCompanyError    = undefined;
+        this.addressCompanyError = undefined;
+        this.cnpjError           = undefined;
+        this.emailError          = undefined;
+        this.passwordError       = undefined;
+        this.cardNumberError     = undefined;
+        this.cvvError            = undefined;
+        this.expirateDateError   = undefined;
+        this.cardNameError       = undefined;
       },
 
-      addressCompany (value) {
-        this.addressCompanyError = '';
-        if (!value) this.addressCompanyError = 'Insira o endereço da matriz';
+      nameCompany () {
+        this.nameCompanyCheck();
       },
 
-      cnpj (value) {
-        this.cnpjError = '';
-        if (!value) {
-          this.cnpjError = 'Insira o CNPJ';
-
-        } else if (value.length < 18) {
-          this.cnpjError = 'CNPJ inválido';
-        }
+      addressCompany () {
+        this.addressCompanyCheck();
       },
 
-      email (value) {
-        this.emailError = '';
-        if (!value) {
-          this.emailError = 'Insira o e-mail';
-
-        } else if (!value.match(/^[a-z0-9-_.]+@[a-z0-9]+\.[a-z]+/i)) {
-          this.emailError = 'E-mail inválido';
-        }
+      cnpj () {
+        this.cnpjCheck();
       },
 
-      password (value) {
-        this.passwordError = '';
-        if (!value) {
-          this.passwordError = 'Insira a senha';
-
-        } else if (value.length < 4) {
-          this.passwordError = 'Senha muito curta, insira ao menos 4 caracteres';
-        }
+      email () {
+        this.emailCheck
       },
 
-      cardNumber (value) {
-        this.cardNumberError = '';
-        if (!value) {
-          this.cardNumberError = 'Insira o número do cartão';
-
-        } else if (value.length < 19) {
-          this.cardNumberError = 'Número do cartão inválido';
-        }
+      password () {
+        this.passwordCheck();
       },
 
-      cvv (value) {
-        this.cvvError = '';
-        if (!value) {
-          this.cvvError = 'Insira o CVV';
-
-        } else if (value.length < 3) {
-          this.cvvError = 'CVV inválido';
-        }
+      cardNumber () {
+        this.cardNumberCheck();
       },
 
-      expirateDate (value) {
-        this.expirateDateError = '';
-        if (!value) {
-          this.expirateDateError = 'Insira a data de expiração';
-
-        } else if (value.length < 5) {
-          this.expirateDateError = 'Data de expiração inválido';
-        }
+      cvv () {
+        this.cvvCheck();
       },
 
-      cardName (value) {
-        this.cardNameError = '';
-        if (!value) this.cardNameError = 'Insira o nome completo do titular';
+      expirateDate () {
+        this.expirateDateCheck();
+      },
+
+      cardName () {
+        this.cardNameCheck();
       }
     },
 
     methods: {
       closeDialog () {
         this.$emit('close');
-        this.step           = true;
-        this.nameCompany    = '';
-        this.addressCompany = '';
-        this.cnpj           = '';
-        this.email          = '';
-        this.password       = '';
-        this.cardNumber     = '';
-        this.cvv            = '';
-        this.expirateDate   = '';
-        this.cardName       = '';
 
-        this.errorMessage        = '';
-        this.nameCompanyError    = '';
-        this.addressCompanyError = '';
-        this.cnpjError           = '';
-        this.emailError          = '';
-        this.passwordError       = '';
-        this.cardNumberError     = '';
-        this.cvvError            = '';
-        this.expirateDateError   = '';
-        this.cardNameError       = '';
+        this.step           = true;
+        this.nameCompany    = undefined;
+        this.addressCompany = undefined;
+        this.cnpj           = undefined;
+        this.email          = undefined;
+        this.password       = undefined;
+        this.cardNumber     = undefined;
+        this.cvv            = undefined;
+        this.expirateDate   = undefined;
+        this.cardName       = undefined;
       },
 
       expirateDateFormat (value) {
@@ -326,17 +293,17 @@
       },
 
       nameCompanyCheck () {
-        this.nameCompanyError = '';
+        this.nameCompanyError = undefined;
         if (!this.nameCompany) this.nameCompanyError = 'Insira o nome da empresa';
       },
 
       addressCompanyCheck () {
-        this.addressCompanyError = '';
+        this.addressCompanyError = undefined;
         if (!this.addressCompany) this.addressCompanyError = 'Insira o endereço da matriz';
       },
 
       cnpjCheck () {
-        this.cnpjError = '';
+        this.cnpjError = undefined;
         if (!this.cnpj) {
           this.cnpjError = 'Insira o CNPJ';
 
@@ -346,7 +313,7 @@
       },
 
       emailCheck () {
-        this.emailError = '';
+        this.emailError = undefined;
         if (!this.email) {
           this.emailError = 'Insira o e-mail';
 
@@ -356,17 +323,17 @@
       },
 
       passwordCheck () {
-        this.passwordError = '';
+        this.passwordError = undefined;
         if (!this.password) {
           this.passwordError = 'Insira a senha';
 
-        } else if (this.password.length < 4) {
-          this.passwordError = 'Senha muito curta, insira ao menos 4 caracteres';
+        } else if (this.password.length < 6) {
+          this.passwordError = 'Senha muito curta, insira ao menos 6 caracteres';
         }
       },
 
       cardNumberCheck () {
-        this.cardNumberError = '';
+        this.cardNumberError = undefined;
         if (!this.cardNumber) {
           this.cardNumberError = 'Insira o número do cartão';
 
@@ -376,7 +343,7 @@
       },
 
       cvvCheck () {
-        this.cvvError = '';
+        this.cvvError = undefined;
         if (!this.cvv) {
           this.cvvError = 'Insira o CVV';
 
@@ -386,7 +353,7 @@
       },
 
       expirateDateCheck () {
-        this.expirateDateError = '';
+        this.expirateDateError = undefined;
         if (!this.expirateDate) {
           this.expirateDateError = 'Insira a data de expiração';
 
@@ -396,7 +363,7 @@
       },
 
       cardNameCheck () {
-        this.cardNameError = '';
+        this.cardNameError = undefined;
         if (!this.cardName) this.cardNameError = 'Insira o nome completo do titular';
       },
 

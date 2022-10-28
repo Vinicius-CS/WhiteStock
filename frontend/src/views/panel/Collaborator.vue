@@ -5,9 +5,10 @@
         <h3>Colaboradores</h3>
       </div>
       <v-btn
-      style="position: absolute; right: 1rem;"
+        v-if="this.$store.getters.hasPermission('collaborator', 'add')"
+        style="position: absolute; right: 1rem;"
         class="btn btn_hover_1"
-        @click="step = false"
+        @click="typeComponent = 'add'; showCollaboratorComponent = true"
       >
         Novo Colaborador
       </v-btn>
@@ -25,7 +26,7 @@
     <v-divider color="grey" style="margin-top: 1rem"></v-divider>
 
     <div>
-      <v-table class="table" v-if="!this.dataAll">
+      <v-table class="table" v-if="this.dataAll.length > 0">
         <thead class="tableHeader">
           <tr>
             <th class="text-center">
@@ -33,6 +34,9 @@
             </th>
             <th class="text-center">
               Nome
+            </th>
+            <th class="text-center">
+              CPF
             </th>
             <th class="text-center">
               E-Mail
@@ -52,22 +56,26 @@
           >
             <td>{{ item.id }}</td>
             <td>{{ item.name }}</td>
+            <td>{{ item.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/g,"\$1.\$2.\$3\-\$4") }}</td>
             <td>{{ item.email }}</td>
             <td>{{ item.enabled == 'true' ? 'Sim' : 'Não' }}</td>
             <td>
               <v-btn
+                v-if="this.$store.getters.hasPermission('collaborator', 'view')"
                 style="margin-left: 0.3rem; margin-right: 0.3rem;"
                 size="x-small"
                 icon="mdi-eye"
                 color="grey"
               ></v-btn>
               <v-btn
+                v-if="this.$store.getters.hasPermission('collaborator', 'edit')"
                 style="margin-left: 0.3rem; margin-right: 0.3rem;"
                 size="x-small"
                 icon="mdi-pencil"
                 color="grey"
               ></v-btn>
               <v-btn
+                v-if="this.$store.getters.hasPermission('collaborator', 'delete')"
                 style="margin-left: 0.3rem; margin-right: 0.3rem;"
                 size="x-small"
                 icon="mdi-close-thick"
@@ -82,36 +90,53 @@
         Nenhum colaborador encontrado
       </div>
 
-      <div class="text-center" style="padding-top: 1rem;" v-if="!this.dataAll">
+      <div class="text-center" style="padding-top: 1rem;" v-if="this.dataAll.length > 0">
         <v-pagination
           @click="tableAjust"
           v-model="page"
           rounded="circle"
           :total-visible="5"
-          :length="2"
+          :length="lengthPage"
         ></v-pagination>
       </div>
 
-      <ConfirmComponent v-model="showConfirmComponent" @close="showConfirmComponent = false" @yes="deleteThis(this.deleteThisData); showConfirmComponent = false;" title="Exclusão de Colaborador" :text='"Tem certeza que deseja excluir o colaborador <b>" + this.deleteThisData.name + "</b>?"' textLoading="Excluindo, aguarde..."/>
+      <ConfirmComponent v-model="showConfirmComponent" @close="showConfirmComponent = false" @confirm="deleteThis(this.deleteThisData); showConfirmComponent = false;" title="Exclusão de Colaborador" :text='"Tem certeza que deseja excluir o colaborador <b>" + this.deleteThisData.name + "</b>?"' textLoading="Excluindo, aguarde..."/>
+      <CollaboratorComponent v-model="showCollaboratorComponent" @close="actionThis" :show="this.showCollaboratorComponent" :data="this.dataComponent" :type="this.typeComponent"/>
     </div>
   </v-container>
 </template>
     
   <script>
+    import router from '@/router';
     import Config from '@/assets/config.json';
-    import ConfirmComponent from '@/components/ConfirmComponent.vue'
+    import ConfirmComponent from '@/components/ConfirmComponent.vue';
+    import CollaboratorComponent from '@/components/CollaboratorComponent.vue';
 
     export default {
       name: 'CollaboratorPanel',
 
       components: {
-        ConfirmComponent
+        ConfirmComponent,
+        CollaboratorComponent
       },
   
       data: () => ({
-        page: 1,
+        permission: {
+          view   : 0,
+          add    : 0,
+          edit   : 0,
+          delete : 0
+        },
 
-        showConfirmComponent: false,
+        page                     : 1,
+        lengthPage               : 1,
+        perPage                  : 15,
+        showConfirmComponent     : false,
+        showCollaboratorComponent: false,
+
+        dataComponent: [],
+        typeComponent: undefined,
+
 
         dataAll  : [],
         tableData: [],
@@ -119,7 +144,7 @@
         messageSnackbar: {
           model  : false,
           color  : 'black',
-          message: '',
+          message: undefined,
           timeout: 5000
         },
 
@@ -129,6 +154,19 @@
       }),
 
       methods: {
+        actionThis (value = null, item = null) {
+          if (value == 'registered') {
+            this.showCollaboratorComponent = false;
+            this.messageSnackbar.message = `O colaborador <b>${item.name}</b> foi cadastrado`;
+            this.messageSnackbar.color = 'green';
+            this.messageSnackbar.model = true;
+            this.listThis();
+            
+          } else {
+            this.showCollaboratorComponent = false;
+          }
+        },
+
         async deleteThis (item) {
           const axios = require('axios').default;
           var data = require('qs').stringify({
@@ -157,9 +195,10 @@
         async listThis () {
           const axios = require('axios').default;
 
-          await axios.get(`${Config.API_URL}/collaborator`, {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
+          await axios.get(`${Config.API_URL}/list/collaborator`, {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
             if (response.status == 200) {
               this.dataAll = response.data;
+              this.tableAjust();
             }
 
           }).catch(err => {
@@ -174,9 +213,15 @@
         },
 
         tableAjust () {
-          let itemIndex = (this.page * 5) - 5;
-          let j = itemIndex < 1 ? 5 : itemIndex * 2;
+          this.lengthPage = 1;
+          let itemIndex = (this.page * this.perPage) - this.perPage;
+          let j = itemIndex < 1 ? this.perPage : itemIndex * 2;
           let z = this.dataAll.length - itemIndex;
+
+          do {
+            this.lengthPage++;
+          } while ((this.perPage * this.lengthPage) <= this.dataAll.length);
+
 
           this.tableData = [];
           for (let i = itemIndex; i < j && z > 0; i++, z--) {
@@ -185,14 +230,20 @@
         },
 
         messageShow (message, color) {
-          this.messageSnackbar.model = true;
+          this.messageSnackbar.model   = true;
           this.messageSnackbar.message = message;
-          this.messageSnackbar.color = color;
+          this.messageSnackbar.color   = color;
         }
       },
       
-      mounted () {
-        this.listThis();
+      beforeMount () {
+        if (this.$store.getters.hasPermission('collaborator', 'view')) {
+          this.permission = this.$store.state.permission;
+          this.listThis();
+
+        } else {
+          router.push('/panel');
+        }
       }
     }
   </script>

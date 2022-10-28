@@ -63,31 +63,32 @@ app.post(`${Config.PATH}/login`, (req, res, next) => {
     return res.status(401).send({ message: 'Invalid Data' });
   }
 
-  db.query(`SELECT * FROM collaborator WHERE email = '${req.body.email}' AND password = MD5('${req.body.password}')`, function (err, result, fields) {
+  db.query(`SELECT * FROM collaborator WHERE email = '${req.body.email.toLowerCase()}' AND password = MD5('${req.body.password}')`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Login`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error' });
     }
 
     if (result.length <= 0) {
-      db.query(`SELECT * FROM company WHERE email = '${req.body.email}' AND password = MD5('${req.body.password}')`, function (err, result, fields) {
+      db.query(`SELECT * FROM company WHERE email = '${req.body.email.toLowerCase()}' AND password = MD5('${req.body.password}')`, function (err, result, fields) {
         if (err) {
           console.error({ info: `Error Login`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
           return res.status(500).send({ message: 'Server Error' });
         }
         
         if (result.length <= 0) return res.status(401).send({ message: 'Invalid Account' });
+        if (result[0]['enabled'] == 'false') return res.status(401).send({ message: 'Disabled Account' });
         
-        var id = result[0]['id'];
-        var email = result[0]['email'];
-        var cnpj = result[0]['cnpj'];
-        var name = result[0]['name'];
-        var address = result[0]['address'];
-        var photo = result[0]['photo'];
-        var plan = result[0]['plan'];
+        var id           = result[0]['id'];
+        var email        = result[0]['email'];
+        var cnpj         = result[0]['cnpj'];
+        var name         = result[0]['name'];
+        var address      = result[0]['address'];
+        var photo        = result[0]['photo'];
+        var plan         = result[0]['plan'];
         var payment_type = result[0]['payment_type'];
-        var enabled = result[0]['enabled'];
-        var PrivateKey = fs.readFileSync('./settings/private.key', 'utf8');
+        var enabled      = result[0]['enabled'];
+        var PrivateKey   = fs.readFileSync('./settings/private.key', 'utf8');
 
         var Token = jwt.sign({ id, email, cnpj, name, address, photo, plan, payment_type, enabled }, PrivateKey, {
           expiresIn: TOKEN_EXPIRES,
@@ -98,18 +99,21 @@ app.post(`${Config.PATH}/login`, (req, res, next) => {
       });
 
     } else {
-      var id = result[0]['id'];
-      var email = result[0]['email'];
-      var cpf = result[0]['cnpj'];
-      var name = result[0]['name'];
-      var gender = result[0]['address'];
-      var photo = result[0]['photo'];
-      var role_id = result[0]['plan'];
-      var company_id = result[0]['payment_type'];
-      var enabled = result[0]['enabled'];
-      var PrivateKey = fs.readFileSync('./settings/private.key', 'utf8');
+      if (result[0]['enabled'] == 'false') return res.status(401).send({ message: 'Disabled Account' });
+      
+      var id           = result[0]['id'];
+      var email        = result[0]['email'];
+      var cpf          = result[0]['cnpj'];
+      var name         = result[0]['name'];
+      var gender       = result[0]['address'];
+      var photo        = result[0]['photo'];
+      var role_id      = result[0]['plan'];
+      var company_id   = result[0]['payment_type'];
+      var enabled      = result[0]['enabled'];
+      const permission = JSON.parse(result[0].permission);
+      var PrivateKey   = fs.readFileSync('./settings/private.key', 'utf8');
 
-      var Token = jwt.sign({ id, email, cpf, name, gender, photo, role_id, company_id, enabled }, PrivateKey, {
+      var Token = jwt.sign({ id, email, cpf, name, gender, photo, role_id, company_id, enabled, permission }, PrivateKey, {
         expiresIn: TOKEN_EXPIRES,
         algorithm: 'RS256'
       });
@@ -132,7 +136,7 @@ app.post(`${Config.PATH}/register`, (req, res, next) => {
     var photo = req.body.photo;
   }
 
-  db.query(`INSERT INTO company(email, password, cnpj, name, address, photo, plan, payment_type) VALUES ('${req.body.email}', MD5('${req.body.password}'), '${req.body.cnpj}', '${req.body.name}', '${req.body.address}', '${photo}', '${req.body.plan}', '${req.body.payment_type}')`, function (err, result, fields) {
+  db.query(`INSERT INTO company(email, password, cnpj, name, address, photo, plan, payment_type) VALUES ('${req.body.email.toLowerCase()}', MD5('${req.body.password}'), '${req.body.cnpj}', '${req.body.name.toUpperCase()}', '${req.body.address.toUpperCase()}', '${photo}', '${req.body.plan}', '${req.body.payment_type}')`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Register Company`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error' });
@@ -142,58 +146,7 @@ app.post(`${Config.PATH}/register`, (req, res, next) => {
   });
 });
 
-app.post(`${Config.PATH}/collaborator`, verifyJWT, (req, res, next) => {
-  if (!req.body.email || !req.body.password || !req.body.cpf || !req.body.name || !req.body.role_id || !req.body.company_id) {
-    return res.status(401).send({ message: 'Invalid Data' });
-  }
-
-  if (!req.body.photo) {
-    var photo = 'https://i.imgur.com/fibx3wL.png';
-  } else {
-    var photo = req.body.photo;
-  }
-
-  db.query(`INSERT INTO company(email, password, cpf, name, photo, role_id, company_id) VALUES ('${req.body.email}', MD5('${req.body.password}'), '${req.body.cpf}', '${req.body.name}', '${photo}', '${req.body.role_id}', '${req.body.company_id}')`, function (err, result, fields) {
-    if (err) {
-      console.error({ info: `Error Register Collaborator`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
-      return res.status(500).send({ message: 'Server Error' });
-    }
-    
-    return res.status(200).send({ message: 'Registered' });
-  });
-});
-
-app.post(`${Config.PATH}/role`, verifyJWT, (req, res, next) => {
-  if (!req.body.name || !req.body.description || !req.body.company_id) {
-    return res.status(401).send({ message: 'Invalid Data' });
-  }
-
-  db.query(`INSERT INTO role(name, description, company_id) VALUES ('${req.body.name}', '${req.body.description}', '${req.body.company_id}')`, function (err, result, fields) {
-    if (err) {
-      console.error({ info: `Error Register Role`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
-      return res.status(500).send({ message: 'Server Error' });
-    }
-    
-    return res.status(200).send({ message: 'Registered' });
-  });
-});
-
-app.post(`${Config.PATH}/permission`, verifyJWT, (req, res, next) => {
-  if (!req.body.name || !req.body.description || !req.body.role_id || !req.body.company_id) {
-    return res.status(401).send({ message: 'Invalid Data' });
-  }
-
-  db.query(`INSERT INTO permission(name, description, role_id, company_id) VALUES ('${req.body.name}', '${req.body.description}', '${req.body.role_id}', '${req.body.company_id}')`, function (err, result, fields) {
-    if (err) {
-      console.error({ info: `Error Register Permission`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
-      return res.status(500).send({ message: 'Server Error' });
-    }
-    
-    return res.status(200).send({ message: 'Registered' });
-  });
-});
-
-app.post(`${Config.PATH}/category`, verifyJWT, (req, res, next) => {
+app.post(`${Config.PATH}/insert/category`, verifyJWT, (req, res, next) => {
   if (!req.body.name || !req.body.description || !req.body.company_id) {
     return res.status(401).send({ message: 'Invalid Data' });
   }
@@ -208,10 +161,9 @@ app.post(`${Config.PATH}/category`, verifyJWT, (req, res, next) => {
   });
 });
 
-app.post(`${Config.PATH}/product`, verifyJWT, (req, res, next) => {
+app.post(`${Config.PATH}/insert/product`, verifyJWT, (req, res, next) => {
   if (!req.body.name || !req.body.description || !req.body.stock || !req.body.category_id || !req.body.company_id) {
     return res.status(401).send({ message: 'Invalid Data' });
-
   }
 
   if (!req.body.photo) {
@@ -232,10 +184,10 @@ app.post(`${Config.PATH}/product`, verifyJWT, (req, res, next) => {
 
 /*-------------------- GET - LIST --------------------*/
 
-app.get(`${Config.PATH}/collaborator`, verifyJWT, (req, res, next) => {
+app.get(`${Config.PATH}/list/collaborator`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT collaborator.id, collaborator.email, collaborator.cpf, collaborator.name, collaborator.photo, collaborator.enabled, company.name AS comapny_name FROM collaborator LEFT JOIN company ON company.id = collaborator.company_id WHERE collaborator.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
+  db.query(`SELECT collaborator.id, collaborator.email, collaborator.cpf, collaborator.name, collaborator.photo, collaborator.enabled, collaborator.permission, company.name AS comapny_name FROM collaborator LEFT JOIN company ON company.id = collaborator.company_id WHERE collaborator.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Collaborator List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error' });
@@ -246,35 +198,7 @@ app.get(`${Config.PATH}/collaborator`, verifyJWT, (req, res, next) => {
   });
 });
 
-app.get(`${Config.PATH}/role`, verifyJWT, (req, res, next) => {
-  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
-
-  db.query(`SELECT role.*, company.name FROM role LEFT JOIN company ON company.id = role.company_id WHERE role.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
-    if (err) {
-      console.error({ info: `Error Company List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
-      return res.status(500).send({ message: 'Server Error' });
-    }
-
-    if (result.length <= 0) return res.status(204).send();
-    return res.status(200).send(result);
-  });
-});
-
-app.get(`${Config.PATH}/permission`, verifyJWT, (req, res, next) => {
-  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
-
-  db.query(`SELECT permission.*, role.name, company.name FROM permission LEFT JOIN role ON role.company_id = permission.company_id LEFT JOIN company ON company.id = permission.company_id WHERE permission.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
-    if (err) {
-      console.error({ info: `Error Permission List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
-      return res.status(500).send({ message: 'Server Error' });
-    }
-
-    if (result.length <= 0) return res.status(204).send();
-    return res.status(200).send(result);
-  });
-});
-
-app.get(`${Config.PATH}/category`, verifyJWT, (req, res, next) => {
+app.get(`${Config.PATH}/list/category`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
   db.query(`SELECT product_category.*, company.name FROM product_category LEFT JOIN company ON company.id = product_category.company_id WHERE product_category.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
@@ -284,11 +208,11 @@ app.get(`${Config.PATH}/category`, verifyJWT, (req, res, next) => {
     }
 
     if (result.length <= 0) return res.status(204).send();
-    return res.status(200).send(result);
+    return res.status(200).send(result[0].permission);
   });
 });
 
-app.get(`${Config.PATH}/product`, verifyJWT, (req, res, next) => {
+app.get(`${Config.PATH}/list/product`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
   db.query(`SELECT product.*, company.name FROM product LEFT JOIN company ON company.id = product.company_id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
@@ -299,6 +223,31 @@ app.get(`${Config.PATH}/product`, verifyJWT, (req, res, next) => {
 
     if (result.length <= 0) return res.status(204).send();
     return res.status(200).send(result);
+  });
+});
+
+/*-------------------- INSERT --------------------*/
+
+app.post(`${Config.PATH}/register/collaborator`, verifyJWT, (req, res, next) => {
+  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
+
+  if (!req.body.email || !req.body.password || !req.body.cpf || !req.body.name) {
+    return res.status(401).send({ message: 'Invalid Data' });
+  }
+
+  if (!req.body.photo) {
+    var photo = 'https://i.imgur.com/fibx3wL.png';
+  } else {
+    var photo = req.body.photo;
+  }
+
+  db.query(`INSERT INTO collaborator(email, password, cpf, name, gender, photo, company_id, enabled, permission) VALUES ('${req.body.email.toLowerCase()}', MD5('${req.body.password}'), '${req.body.cpf}', '${req.body.name.toUpperCase()}', '${req.body.gender}', '${photo}', '${tokenDecoded.company_id ?? tokenDecoded.id}', '${req.body.enabled}', '${JSON.stringify(req.body.permission)}')`, function (err, result, fields) {
+    if (err) {
+      console.error({ info: `Error Register Collaborator`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
+      return res.status(500).send({ message: 'Server Error', code: err.code });
+    }
+    
+    return res.status(200).send({ message: 'Registered' });
   });
 });
 
@@ -319,5 +268,6 @@ app.post(`${Config.PATH}/delete/collaborator`, (req, res, next) => {
     return res.status(200).send({ message: 'Deleted' });
   });
 });
+
 var server = http.createServer(app).listen(process.env.SERVER_PORT);
 console.log(`API working on \'${Config.PROTOCOL}${Config.HOST}:${process.env.SERVER_PORT}${Config.PATH}\'\n\n✔ Server API`);
