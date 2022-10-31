@@ -14,7 +14,6 @@
                     <h3 v-if="this.type == 'add' || this.type == 'edit'">{{ this.step ? 'Dados' : 'Permissões' }} do Colaborador</h3>
                 </v-card-title>
                 <v-icon
-                    v-if="this.type != 'add' && this.type != 'edit'"
                     style="position: absolute; right: 1rem; top: 25%;"
                     @click="closeDialog"
                     large
@@ -29,7 +28,7 @@
                 color="red"
                 elevation="24"
             >
-                {{ errorSnackbar.message }}
+                <div v-html="errorSnackbar.message"></div>
             </v-snackbar>
   
             <v-card-text>
@@ -44,6 +43,7 @@
                             label="Nome"
                             hide-details
                             @input="this.name = this.name.toUpperCase()"
+                            :readonly="this.type == 'view' ? true : false"
                         ></v-text-field>
                         <div class="errorMessage">{{ this.nameError }}</div>
             
@@ -52,44 +52,68 @@
                             label="CPF"
                             hide-details
                             v-mask="'###.###.###-##'"
+                            :readonly="this.type == 'view' ? true : false"
                         ></v-text-field>
                         <div class="errorMessage">{{ this.cpfError }}</div>
 
+                        <v-row no-gutters v-if="this.type != 'view'">
+                            <v-col cols="6">
+                                <v-text-field
+                                    style="padding-right: 0.5rem"
+                                    v-model="email"
+                                    label="E-Mail"
+                                    hide-details
+                                    type="email"
+                                    @input="this.email = this.email.toLowerCase()"
+                                    :readonly="this.type == 'view' ? true : false"
+                                ></v-text-field>
+                                <div class="errorMessage">{{ this.emailError }}</div>
+                            </v-col>
+                            <v-col cols="6">
+                                <v-text-field
+                                    style="padding-left: 0.5rem"
+                                    v-model="password"
+                                    label="Senha"
+                                    hide-details
+                                ></v-text-field>
+                                <div class="errorMessage" style="padding-left: 0.5rem">{{ this.passwordError }}</div>
+                            </v-col>
+                        </v-row>
+
                         <v-text-field
+                            v-if="this.type == 'view'"
                             v-model="email"
                             label="E-Mail"
                             hide-details
                             type="email"
                             @input="this.email = this.email.toLowerCase()"
+                            :readonly="this.type == 'view' ? true : false"
                         ></v-text-field>
-                        <div class="errorMessage">{{ this.emailError }}</div>
-            
-                        <v-text-field
-                            v-model="password"
-                            label="Senha"
-                            hide-details
-                        ></v-text-field>
-                        <div class="errorMessage">{{ this.passwordError }}</div>
+                        <div class="errorMessage" v-if="this.type == 'view'">{{ this.emailError }}</div>
 
-                        <v-row>
-                            <v-col>
+                        <v-row no-gutters>
+                            <v-col cols="6">
                                 <v-select
-                                v-model="gender"
-                                label="Gênero"
-                                hide-details
-                                :items="itemGender"
-                                item-title="value"
-                                item-value="key"
+                                    style="padding-right: 0.5rem"
+                                    v-model="gender"
+                                    label="Gênero"
+                                    hide-details
+                                    :items="itemGender"
+                                    item-title="value"
+                                    item-value="key"
+                                    :readonly="this.type == 'view' ? true : false"
                                 ></v-select>
                                 <div class="errorMessage">{{ this.genderError }}</div>
                             </v-col>
-                            <v-col>
+                            <v-col cols="6">
                                 <v-select
+                                    style="padding-left: 0.5rem"
                                     v-model="enabled"
                                     label="Habilitado"
                                     :items="itemEnabled"
                                     item-title="value"
                                     item-value="key"
+                                    :readonly="this.type == 'view' ? true : false"
                                 ></v-select>
                             </v-col>
                         </v-row>
@@ -104,6 +128,7 @@
                             item-value="key"
                             chips
                             multiple
+                            :readonly="this.type == 'view' ? true : false"
                         ></v-select>
 
                         <v-select
@@ -114,6 +139,7 @@
                             item-value="key"
                             chips
                             multiple
+                            :readonly="this.type == 'view' ? true : false"
                         ></v-select>
 
                         <v-select
@@ -124,6 +150,7 @@
                             item-value="key"
                             chips
                             multiple
+                            :readonly="this.type == 'view' ? true : false"
                         ></v-select>
 
                         <v-select
@@ -134,18 +161,11 @@
                             item-value="key"
                             chips
                             multiple
+                            :readonly="this.type == 'view' ? true : false"
                         ></v-select>
                     </div>
 
-                    <div class="text-right" v-if="this.type == 'add' || this.type == 'edit'">
-                        <v-btn
-                            class="btn btn_hover_0"
-                            append-icon="mdi-close-thick"
-                            @click="closeDialog"
-                        >
-                            Cancelar
-                        </v-btn>
-                        
+                    <div class="text-right">
                         <v-btn
                             v-if="this.step"
                             class="btn btn_hover_0"
@@ -165,9 +185,9 @@
                         </v-btn>
 
                         <v-btn
-                            v-if="!this.step"
+                            v-if="(this.type == 'add' || this.type == 'edit') && !this.step"
                             class="btn btn_hover_0"
-                            append-icon="mdi-check-bold"
+                            append-icon="mdi-chevron-double-right"
                             @click="register"
                         >
                             {{ this.type == 'add' ? 'Cadastrar' : 'Salvar' }}
@@ -199,12 +219,11 @@
             step    : true,
             id      : undefined,
             email   : undefined,
-            password: (Math.random() + 1).toString(36).substring(6),
+            password: undefined,
             cpf     : undefined,
             name    : undefined,
             gender  : undefined,
             photo   : undefined,
-            role_id : undefined,
             enabled : 'true',
 
             collaborator: [],
@@ -246,8 +265,37 @@
         watch: {
             show () {
                 if (this.show && (this.type == 'view' || this.type == 'edit')) {
-                    console.log(this.data);
+                    this.id       = this.data.id;
+                    this.email    = this.data.email;
+                    this.password = undefined;
+                    this.cpf      = this.data.cpf;
+                    this.name     = this.data.name;
+                    this.gender   = this.data.gender;
+                    this.enabled  = this.data.enabled;
+
+                    const permission = JSON.parse(this.data.permission);
+                    if (permission['collaborator']['view'] == 1) this.collaborator.push('view');
+                    if (permission['collaborator']['add'] == 1) this.collaborator.push('add');
+                    if (permission['collaborator']['edit'] == 1) this.collaborator.push('edit');
+                    if (permission['collaborator']['delete'] == 1) this.collaborator.push('delete');
+
+                    if (permission['product']['view'] == 1) this.product.push('view');
+                    if (permission['product']['add'] == 1) this.product.push('add');
+                    if (permission['product']['edit'] == 1) this.product.push('edit');
+                    if (permission['product']['delete'] == 1) this.product.push('delete');
+
+                    if (permission['category']['view'] == 1) this.category.push('view');
+                    if (permission['category']['add'] == 1) this.category.push('add');
+                    if (permission['category']['edit'] == 1) this.category.push('edit');
+                    if (permission['category']['delete'] == 1) this.category.push('delete');
+
+                    if (permission['company']['view'] == 1) this.company.push('view');
+                    if (permission['company']['add'] == 1) this.company.push('add');
+                    if (permission['company']['edit'] == 1) this.company.push('edit');
+                    if (permission['company']['delete'] == 1) this.company.push('delete');
                 }
+
+                this.password = this.type == 'add' ? (Math.random() + 1).toString(36).substring(6) : undefined;
 
                 this.errorMessage  = undefined;
                 this.emailError    = undefined;
@@ -258,22 +306,27 @@
             },
 
             email () {
+                if (this.type == 'view') return '';
                 this.emailCheck();
             },
   
             password () {
+                if (this.type == 'view') return '';
                 this.passwordCheck();
             },
 
             cpf () {
+                if (this.type == 'view') return '';
                 this.cpfCheck();
             },
   
             name () {
+                if (this.type == 'view') return '';
                 this.nameCheck();
             },
 
             gender () {
+                if (this.type == 'view') return '';
                 this.genderCheck();
             }
         },
@@ -282,6 +335,8 @@
             closeDialog () {
                 this.$emit('close');
 
+                this.step     = true;
+                this.id       = undefined;
                 this.email    = undefined;
                 this.password = (Math.random() + 1).toString(36).substring(6);
                 this.cpf      = undefined;
@@ -308,10 +363,10 @@
     
             passwordCheck () {
                 this.passwordError = undefined;
-                if (!this.password) {
+                if (this.type == 'add' && !this.password) {
                     this.passwordError = 'Insira a senha';
         
-                } else if (this.password.length < 6) {
+                } else if (this.password != undefined && this.password.length < 6) {
                     this.passwordError = 'Senha muito curta, insira ao menos 6 caracteres';
                 }
             },
@@ -337,91 +392,187 @@
             },
     
             register () {
-                if (this.step) {
-                    this.emailCheck();
-                    this.passwordCheck();
-                    this.cpfCheck();
-                    this.nameCheck();
-                    this.genderCheck();
+                const axios                = require('axios').default;
+                const permission           = [];
+                permission['collaborator'] = [];
+                permission['product']      = [];
+                permission['category']     = [];
+                permission['company']      = [];
 
-                    if (!this.emailError && !this.passwordError && !this.cpfError && !this.nameError && !this.genderError) {
-                        this.step = false;
+                var dataCollaborator = undefined;
+
+                if (this.type == 'add') {
+                    if (this.step) {
+                        this.emailCheck();
+                        this.passwordCheck();
+                        this.cpfCheck();
+                        this.nameCheck();
+                        this.genderCheck();
+
+                        if (!this.emailError && !this.passwordError && !this.cpfError && !this.nameError && !this.genderError) {
+                            this.step = false;
+                        }
+
+                    } else {
+                        permission['collaborator'] = [];
+                        permission['product']      = [];
+                        permission['category']     = [];
+                        permission['company']      = [];
+
+                        this.itemPermission.forEach(item => {
+                            if (this.collaborator.filter(permission => permission == item.key)[0] == undefined) {
+                                permission['collaborator'][item.key] = 0;
+                            } else {
+                                permission['collaborator'][item.key] = 1;
+                            }
+
+                            if (this.product.filter(permission => permission == item.key)[0] == undefined) {
+                                permission['product'][item.key] = 0;
+                            } else {
+                                permission['product'][item.key] = 1;
+                            }
+
+                            if (this.category.filter(permission => permission == item.key)[0] == undefined) {
+                                permission['category'][item.key] = 0;
+                            } else {
+                                permission['category'][item.key] = 1;
+                            }
+
+                            if (this.company.filter(permission => permission == item.key)[0] == undefined) {
+                                permission['company'][item.key] = 0;
+                            } else {
+                                permission['company'][item.key] = 1;
+                            }
+                        });
+
+                        dataCollaborator = {
+                            email       : this.email,
+                            password    : this.password,
+                            cpf         : this.cpf.replace(/[^0-9]/gm, ''),
+                            name        : this.name,
+                            gender      : this.gender,
+                            enabled     : this.enabled,
+                            permission  : permission
+                        };
+                        
+                        axios.post(`${Config.API_URL}/register/collaborator`, require('qs').stringify(dataCollaborator), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
+                            if (response.status == 200) {
+                                this.email    = undefined;
+                                this.password = (Math.random() + 1).toString(36).substring(6);
+                                this.cpf      = undefined;
+                                this.name     = undefined;
+                                this.gender   = undefined;
+                                this.enabled  = 'true';
+
+                                this.collaborator = [];
+                                this.product      = [];
+                                this.category     = [];
+                                this.company      = [];
+                                this.permission   = [];
+
+                                this.$emit('close', 'registered', dataCollaborator);
+                            }
+
+                        }).catch(err => {
+                            if (err.message) {
+                                this.errorSnackbar.message = `Ocorreu um erro ao cadastrar o colaborador <b>${this.name}</b>, tente novamente mais tarde`;
+
+                                if (err.response.data.code == 'ER_DUP_ENTRY') this.errorSnackbar.message = 'CPF ou e-mail já existe';
+                                if (err.response.data.message == 'Invalid Data') this.errorSnackbar.message = 'Verifique os campos';
+
+                                this.errorSnackbar.model = true;
+                                console.log(err);
+                            }
+                        });
+
+                    }
+
+                } else if (this.type == 'edit') {
+                    if (this.step) {
+                        this.emailCheck();
+                        this.passwordCheck();
+                        this.cpfCheck();
+                        this.nameCheck();
+                        this.genderCheck();
+
+                        if (!this.emailError && !this.passwordError && !this.cpfError && !this.nameError && !this.genderError) {
+                            this.step = false;
+                        }
+
+                    } else {
+                        this.itemPermission.forEach(item => {
+                            if (this.collaborator.filter(permission => permission == item.key)[0] == undefined) {
+                                permission['collaborator'][item.key] = 0;
+                            } else {
+                                permission['collaborator'][item.key] = 1;
+                            }
+
+                            if (this.product.filter(permission => permission == item.key)[0] == undefined) {
+                                permission['product'][item.key] = 0;
+                            } else {
+                                permission['product'][item.key] = 1;
+                            }
+
+                            if (this.category.filter(permission => permission == item.key)[0] == undefined) {
+                                permission['category'][item.key] = 0;
+                            } else {
+                                permission['category'][item.key] = 1;
+                            }
+
+                            if (this.company.filter(permission => permission == item.key)[0] == undefined) {
+                                permission['company'][item.key] = 0;
+                            } else {
+                                permission['company'][item.key] = 1;
+                            }
+                        });
+
+                        dataCollaborator = {
+                            id          : this.id,
+                            email       : this.email,
+                            password    : this.password,
+                            cpf         : this.cpf.replace(/[^0-9]/gm, ''),
+                            name        : this.name,
+                            gender      : this.gender,
+                            enabled     : this.enabled,
+                            permission  : permission
+                        };
+                        
+                        axios.post(`${Config.API_URL}/update/collaborator`, require('qs').stringify(dataCollaborator), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
+                            if (response.status == 200) {
+                                this.step     = true;
+                                this.id       = undefined;
+                                this.email    = undefined;
+                                this.password = (Math.random() + 1).toString(36).substring(6);
+                                this.cpf      = undefined;
+                                this.name     = undefined;
+                                this.gender   = undefined;
+                                this.enabled  = 'true';
+
+                                this.collaborator = [];
+                                this.product      = [];
+                                this.category     = [];
+                                this.company      = [];
+                                this.permission   = [];
+
+                                this.$emit('close', 'updated', dataCollaborator);
+                            }
+
+                        }).catch(err => {
+                            if (err.message) {
+                                this.errorSnackbar.message = `Ocorreu um erro ao atualizar o colaborador <b>${this.name}</b>, tente novamente mais tarde`;
+
+                                if (err.response.data.code == 'ER_DUP_ENTRY') this.errorSnackbar.message = 'CPF ou e-mail já existe';
+                                if (err.response.data.message == 'Invalid Data') this.errorSnackbar.message = 'Verifique os campos';
+
+                                this.errorSnackbar.model = true;
+                                console.log(err);
+                            }
+                        });
+
                     }
 
                 } else {
-                    const axios                = require('axios').default;
-                    const permission           = [];
-                    permission['collaborator'] = [];
-                    permission['product']      = [];
-                    permission['category']     = [];
-                    permission['company']      = [];
-
-                    this.itemPermission.forEach(item => {
-                        if (this.collaborator.filter(permission => permission == item.key)[0] == undefined) {
-                            permission['collaborator'][item.key] = 0;
-                        } else {
-                            permission['collaborator'][item.key] = 1;
-                        }
-
-                        if (this.product.filter(permission => permission == item.key)[0] == undefined) {
-                            permission['product'][item.key] = 0;
-                        } else {
-                            permission['product'][item.key] = 1;
-                        }
-
-                        if (this.category.filter(permission => permission == item.key)[0] == undefined) {
-                            permission['category'][item.key] = 0;
-                        } else {
-                            permission['category'][item.key] = 1;
-                        }
-
-                        if (this.company.filter(permission => permission == item.key)[0] == undefined) {
-                            permission['company'][item.key] = 0;
-                        } else {
-                            permission['company'][item.key] = 1;
-                        }
-                    });
-
-                    var dataCollaborator = {
-                        email       : this.email,
-                        password    : this.password,
-                        cpf         : this.cpf.replace(/[^0-9]/gm, ''),
-                        name        : this.name,
-                        gender      : this.gender,
-                        enabled     : this.enabled,
-                        permission  : permission
-                    };
-                    
-                    axios.post(`${Config.API_URL}/register/collaborator`, require('qs').stringify(dataCollaborator), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
-                        if (response.status == 200) {
-                            this.email    = undefined;
-                            this.password = (Math.random() + 1).toString(36).substring(6);
-                            this.cpf      = undefined;
-                            this.name     = undefined;
-                            this.gender   = undefined;
-                            this.enabled  = 'true';
-
-                            this.collaborator = [];
-                            this.product      = [];
-                            this.category     = [];
-                            this.company      = [];
-                            this.permission   = [];
-                            
-                            this.$emit('close', 'registered', dataCollaborator);
-                        }
-
-                    }).catch(err => {
-                        if (err.message) {
-                            this.errorSnackbar.message = 'Ocorreu um erro ao se cadastrar, tente novamente mais tarde';
-
-                            if (err.response.data.code == 'ER_DUP_ENTRY') this.errorSnackbar.message = 'CPF ou e-mail já existe';
-                        
-                            if (err.response.data.message == 'Invalid Data') this.errorSnackbar.message = 'Verifique os campos';
-
-                            this.errorSnackbar.model = true;
-                            console.log(err);
-                        }
-                    });
+                    this.step = false;
                 }
             }
         },

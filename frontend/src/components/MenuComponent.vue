@@ -70,6 +70,7 @@
 
 <script>
   import router from '@/router';
+  import Config from '@/assets/config.json';
   
   export default {
     name: 'MenuComponent',
@@ -139,6 +140,15 @@
     mounted () {
       if (this.$store.state.token == null) {
         router.push('/');
+
+      } else {
+        const axios = require('axios').default;
+
+        axios.get(`${Config.API_URL}/jwt/verify`, {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).catch(err => {
+          if (err.message) {
+            this.logout();
+          }
+        });
       }
     }
   }

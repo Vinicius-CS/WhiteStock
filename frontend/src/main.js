@@ -38,7 +38,7 @@ const store = createStore({
     mutations: {
         setToken (state, value) {
             state.token = value;
-            Cookies.set(`token`, value, { expires: 3 });
+            Cookies.set(`token`, value, { expires: 1 });
         },
 
         removeToken (state) {

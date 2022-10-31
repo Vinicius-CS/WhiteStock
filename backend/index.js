@@ -28,7 +28,7 @@ if (process.env.SERVER_PRODUCTION === 'FALSE') {
     `| DON'T FORGET TO CHANGE \".env\\SERVER_PRODUCTION\" TO \"TRUE\" BEFORE SUBMITTING TO PRODUCTION |\n` +
     `=============================================================================================\n`);
 } else {
-  TOKEN_EXPIRES = 3600
+  TOKEN_EXPIRES = 86400;
 }
 
 function verifyJWT(req, res, next) {
@@ -46,7 +46,19 @@ function decodeJWT(token) {
   return jwt.decode(token, PublicKey, { algorithm: 'RS256' });
 }
 
-app.get(`${Config.PATH}/jwt`, verifyJWT, (req, res, next) => {
+app.get(`${Config.PATH}/jwt/verify`, verifyJWT, (req, res, next) => {
+  if (!req.headers['x-resource-token']) return res.status(401).send({ message: 'Token Verification Failed' });
+
+  var PublicKey = fs.readFileSync('./settings/public.key', 'utf8');
+  const decode = jwt.decode(req.headers['x-resource-token'], PublicKey, { algorithm: 'RS256' }, function (err, decoded) {
+    if (err) return res.status(500).send({ message: 'Invalid Token' });
+    else return res.status(200).send({ message: 'Valid Token' });
+  });
+
+  return res.status(200).send();
+});
+
+app.get(`${Config.PATH}/jwt/decode`, verifyJWT, (req, res, next) => {
   if (!req.headers['x-resource-token']) return res.status(401).send({ message: 'Token Verification Failed' });
 
   var PublicKey = fs.readFileSync('./settings/public.key', 'utf8');
@@ -79,16 +91,15 @@ app.post(`${Config.PATH}/login`, (req, res, next) => {
         if (result.length <= 0) return res.status(401).send({ message: 'Invalid Account' });
         if (result[0]['enabled'] == 'false') return res.status(401).send({ message: 'Disabled Account' });
         
-        var id           = result[0]['id'];
-        var email        = result[0]['email'];
-        var cnpj         = result[0]['cnpj'];
-        var name         = result[0]['name'];
-        var address      = result[0]['address'];
-        var photo        = result[0]['photo'];
-        var plan         = result[0]['plan'];
-        var payment_type = result[0]['payment_type'];
-        var enabled      = result[0]['enabled'];
-        var PrivateKey   = fs.readFileSync('./settings/private.key', 'utf8');
+        var id            = result[0]['id'];
+        var email         = result[0]['email'];
+        var cnpj          = result[0]['cnpj'];
+        var name          = result[0]['name'];
+        var address       = result[0]['address'];
+        var photo         = result[0]['photo'];
+        var plan          = result[0]['plan'];
+        var payment_type  = result[0]['payment_type'];
+        var PrivateKey    = fs.readFileSync('./settings/private.key', 'utf8');
 
         var Token = jwt.sign({ id, email, cnpj, name, address, photo, plan, payment_type, enabled }, PrivateKey, {
           expiresIn: TOKEN_EXPIRES,
@@ -101,17 +112,17 @@ app.post(`${Config.PATH}/login`, (req, res, next) => {
     } else {
       if (result[0]['enabled'] == 'false') return res.status(401).send({ message: 'Disabled Account' });
       
-      var id           = result[0]['id'];
-      var email        = result[0]['email'];
-      var cpf          = result[0]['cnpj'];
-      var name         = result[0]['name'];
-      var gender       = result[0]['address'];
-      var photo        = result[0]['photo'];
-      var role_id      = result[0]['plan'];
-      var company_id   = result[0]['payment_type'];
-      var enabled      = result[0]['enabled'];
-      const permission = JSON.parse(result[0].permission);
-      var PrivateKey   = fs.readFileSync('./settings/private.key', 'utf8');
+      var id            = result[0]['id'];
+      var email         = result[0]['email'];
+      var cpf           = result[0]['cnpj'];
+      var name          = result[0]['name'];
+      var gender        = result[0]['address'];
+      var photo         = result[0]['photo'];
+      var role_id       = result[0]['plan'];
+      var company_id    = result[0]['payment_type'];
+      var enabled       = result[0]['enabled'];
+      const permission  = JSON.parse(result[0].permission);
+      var PrivateKey    = fs.readFileSync('./settings/private.key', 'utf8');
 
       var Token = jwt.sign({ id, email, cpf, name, gender, photo, role_id, company_id, enabled, permission }, PrivateKey, {
         expiresIn: TOKEN_EXPIRES,
@@ -187,7 +198,7 @@ app.post(`${Config.PATH}/insert/product`, verifyJWT, (req, res, next) => {
 app.get(`${Config.PATH}/list/collaborator`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT collaborator.id, collaborator.email, collaborator.cpf, collaborator.name, collaborator.photo, collaborator.enabled, collaborator.permission, company.name AS comapny_name FROM collaborator LEFT JOIN company ON company.id = collaborator.company_id WHERE collaborator.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
+  db.query(`SELECT collaborator.id, collaborator.email, collaborator.cpf, collaborator.name, collaborator.gender, collaborator.photo, collaborator.enabled, collaborator.permission, company.name AS comapny_name FROM collaborator LEFT JOIN company ON company.id = collaborator.company_id WHERE collaborator.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Collaborator List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error' });
@@ -231,7 +242,7 @@ app.get(`${Config.PATH}/list/product`, verifyJWT, (req, res, next) => {
 app.post(`${Config.PATH}/register/collaborator`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  if (!req.body.email || !req.body.password || !req.body.cpf || !req.body.name) {
+  if (!req.body.email || !req.body.password || !req.body.cpf || !req.body.name || !req.body.gender) {
     return res.status(401).send({ message: 'Invalid Data' });
   }
 
@@ -248,6 +259,25 @@ app.post(`${Config.PATH}/register/collaborator`, verifyJWT, (req, res, next) => 
     }
     
     return res.status(200).send({ message: 'Registered' });
+  });
+});
+
+/*-------------------- UPDATE --------------------*/
+
+app.post(`${Config.PATH}/update/collaborator`, verifyJWT, (req, res, next) => {
+  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
+
+  if (!req.body.id) {
+    return res.status(401).send({ message: 'Invalid Data' });
+  }
+
+  db.query(`UPDATE collaborator SET email = '${req.body.email.toLowerCase()}', ${req.body.password != undefined ? "password = MD5('" + req.body.password + "'), " : ''}cpf = '${req.body.cpf}', name = '${req.body.name.toUpperCase()}', gender = '${req.body.gender}', enabled = '${req.body.enabled}', permission = '${JSON.stringify(req.body.permission)}' WHERE company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND id = ${req.body.id}`, function (err, result, fields) {
+    if (err) {
+      console.error({ info: `Error Update Collaborator`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
+      return res.status(500).send({ message: 'Server Error', code: err.code });
+    }
+    
+    return res.status(200).send({ message: 'Updated' });
   });
 });
 

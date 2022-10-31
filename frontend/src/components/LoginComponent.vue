@@ -26,7 +26,7 @@
         color="red"
         elevation="24"
       >
-        {{ errorSnackbar.message }}
+        <div v-html="errorSnackbar.message"></div>
       </v-snackbar>
 
       <v-card-text>
@@ -110,7 +110,6 @@
           }).catch(err => {
             if (err.message) {
               this.errorSnackbar.message = 'Ocorreu um erro ao entrar, tente novamente mais tarde';
-              console.log(err.response.data.message);
               
               if (err.response.data.message == 'Invalid Account') this.errorSnackbar.message = 'E-mail ou senha inválidos';
               if (err.response.data.message == 'Disabled Account') this.errorSnackbar.message = 'Esta conta está desabilitada';

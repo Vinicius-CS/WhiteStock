@@ -27,7 +27,7 @@
         color="red"
         elevation="24"
       >
-        {{ errorSnackbar.message }}
+        <div v-html="errorSnackbar.message"></div>
       </v-snackbar>
 
       <v-card-text>
@@ -61,9 +61,10 @@
             ></v-text-field>
             <div class="errorMessage">{{ this.cnpjError }}</div>
 
-            <v-row>
-              <v-col>
+            <v-row no-gutters>
+              <v-col cols="6">
                 <v-text-field
+                  style="padding-right: 0.5rem"
                   v-model="email"
                   label="E-Mail"
                   hide-details
@@ -72,14 +73,15 @@
                 ></v-text-field>
                 <div class="errorMessage">{{ this.emailError }}</div>
               </v-col>
-              <v-col>
+              <v-col cols="6">
                 <v-text-field
+                  style="padding-left: 0.5rem"
                   v-model="password"
                   label="Senha"
                   hide-details
                   type="password"
                 ></v-text-field>
-                <div class="errorMessage">{{ this.passwordError }}</div>
+                <div class="errorMessage" style="padding-left: 0.5rem">{{ this.passwordError }}</div>
               </v-col>
             </v-row>
           </div>
@@ -93,9 +95,10 @@
             ></v-text-field>
             <div class="errorMessage">{{ this.cardNumberError }}</div>
 
-            <v-row>
-              <v-col>
+            <v-row no-gutters>
+              <v-col cols="6">
                 <v-text-field
+                  style="padding-right: 0.5rem"
                   v-model="cvv"
                   label="CVV"
                   hide-details
@@ -103,15 +106,16 @@
                 ></v-text-field>
                 <div class="errorMessage">{{ this.cvvError }}</div>
               </v-col>
-              <v-col>
+              <v-col cols="6">
                 <v-text-field
+                  style="padding-left: 0.5rem"
                   v-model="expirateDate"
                   label="Data de Expiração"
                   hide-details
                   maxlength="5"
                   @input="expirateDateFormat(this.expirateDate)"
                 ></v-text-field>
-                <div class="errorMessage">{{ this.expirateDateError }}</div>
+                <div class="errorMessage" style="padding-left: 0.5rem">{{ this.expirateDateError }}</div>
               </v-col>
             </v-row>
 
@@ -235,7 +239,7 @@
       },
 
       email () {
-        this.emailCheck
+        this.emailCheck();
       },
 
       password () {
@@ -399,12 +403,11 @@
 
             axios.post(`${Config.API_URL}/register`, data, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then(response => {
               if (response.status == 200) {
-                this.$emit('login', 'Empresa registrada com sucesso', 'green');
+                this.$emit('login', 'Empresa cadastrada com sucesso', 'green');
                 this.$emit('close');
               } else {
                 this.errorSnackbar.message = 'Ocorreu um erro ao se cadastrar, tente novamente mais tarde';
                 this.errorSnackbar.model = true;
-                console.log(response);
               }
 
             }).catch(err => {

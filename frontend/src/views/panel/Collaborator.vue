@@ -66,6 +66,7 @@
                 size="x-small"
                 icon="mdi-eye"
                 color="grey"
+                @click="this.dataComponent = item; typeComponent = 'view'; showCollaboratorComponent = true"
               ></v-btn>
               <v-btn
                 v-if="this.$store.getters.hasPermission('collaborator', 'edit')"
@@ -73,6 +74,7 @@
                 size="x-small"
                 icon="mdi-pencil"
                 color="grey"
+                @click="this.dataComponent = item; typeComponent = 'edit'; showCollaboratorComponent = true"
               ></v-btn>
               <v-btn
                 v-if="this.$store.getters.hasPermission('collaborator', 'delete')"
@@ -162,6 +164,13 @@
             this.messageSnackbar.model = true;
             this.listThis();
             
+          } else if (value == 'updated') {
+            this.showCollaboratorComponent = false;
+            this.messageSnackbar.message = `O colaborador <b>${item.name}</b> foi atualizado`;
+            this.messageSnackbar.color = 'green';
+            this.messageSnackbar.model = true;
+            this.listThis();
+            
           } else {
             this.showCollaboratorComponent = false;
           }
@@ -217,10 +226,10 @@
           let itemIndex = (this.page * this.perPage) - this.perPage;
           let j = itemIndex < 1 ? this.perPage : itemIndex * 2;
           let z = this.dataAll.length - itemIndex;
-
-          do {
+          
+          while ((this.perPage * this.lengthPage) < this.dataAll.length) {
             this.lengthPage++;
-          } while ((this.perPage * this.lengthPage) <= this.dataAll.length);
+          }
 
 
           this.tableData = [];
