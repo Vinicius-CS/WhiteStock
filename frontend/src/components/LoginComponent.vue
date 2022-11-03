@@ -109,7 +109,7 @@
 
           }).catch(err => {
             if (err.message) {
-              this.errorSnackbar.message = 'Ocorreu um erro ao entrar, tente novamente mais tarde';
+              this.errorSnackbar.message = err.response.data.data.message;
               
               if (err.response.data.message == 'Invalid Account') this.errorSnackbar.message = 'E-mail ou senha inválidos';
               if (err.response.data.message == 'Disabled Account') this.errorSnackbar.message = 'Esta conta está desabilitada';

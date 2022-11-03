@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import IndexPage from '@/views/Index.vue'
 import HomePanel from '@/views/panel/Home.vue'
 import CollaboratorPanel from '@/views/panel/Collaborator.vue'
+import ProductPanel from '@/views/panel/Product.vue'
+import CategoryPanel from '@/views/panel/Category.vue'
 
 const routes = [
   {
@@ -18,6 +20,16 @@ const routes = [
     path: '/panel/collaborator',
     name: 'collaborator',
     component: CollaboratorPanel
+  },
+  {
+    path: '/panel/product',
+    name: 'product',
+    component: ProductPanel
+  },
+  {
+    path: '/panel/product-category',
+    name: 'category',
+    component: CategoryPanel
   },
 ]
 

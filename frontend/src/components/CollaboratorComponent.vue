@@ -218,10 +218,10 @@
         data: () => ({
             step    : true,
             id      : undefined,
+            name    : undefined,
             email   : undefined,
             password: undefined,
             cpf     : undefined,
-            name    : undefined,
             gender  : undefined,
             photo   : undefined,
             enabled : 'true',
@@ -254,10 +254,10 @@
                 message: undefined
             },
     
+            nameError    : undefined,
             emailError   : undefined,
             passwordError: undefined,
             cpfError     : undefined,
-            nameError    : undefined,
             genderError  : undefined,
             photoError   : undefined
         }),
@@ -266,10 +266,10 @@
             show () {
                 if (this.show && (this.type == 'view' || this.type == 'edit')) {
                     this.id       = this.data.id;
+                    this.name     = this.data.name;
                     this.email    = this.data.email;
                     this.password = undefined;
                     this.cpf      = this.data.cpf;
-                    this.name     = this.data.name;
                     this.gender   = this.data.gender;
                     this.enabled  = this.data.enabled;
 
@@ -298,11 +298,16 @@
                 this.password = this.type == 'add' ? (Math.random() + 1).toString(36).substring(6) : undefined;
 
                 this.errorMessage  = undefined;
+                this.nameError     = undefined;
                 this.emailError    = undefined;
                 this.passwordError = undefined;
                 this.cpfError      = undefined;
-                this.nameError     = undefined;
                 this.genderError   = undefined;
+            },
+
+            name () {
+                if (this.type == 'view') return '';
+                this.nameCheck();
             },
 
             email () {
@@ -319,11 +324,6 @@
                 if (this.type == 'view') return '';
                 this.cpfCheck();
             },
-  
-            name () {
-                if (this.type == 'view') return '';
-                this.nameCheck();
-            },
 
             gender () {
                 if (this.type == 'view') return '';
@@ -337,10 +337,10 @@
 
                 this.step     = true;
                 this.id       = undefined;
+                this.name     = undefined;
                 this.email    = undefined;
                 this.password = (Math.random() + 1).toString(36).substring(6);
                 this.cpf      = undefined;
-                this.name     = undefined;
                 this.gender   = undefined;
                 this.enabled  = 'true';
 
@@ -349,6 +349,11 @@
                 this.category     = [];
                 this.company      = [];
                 this.permission   = [];
+            },
+
+            nameCheck () {
+                this.nameError = undefined;
+                if (!this.name) this.nameError = 'Insira o nome completo do colaborador';
             },
     
             emailCheck () {
@@ -380,11 +385,6 @@
                     this.cpfError = 'CPF inválido';
                 }
             },
-    
-            nameCheck () {
-                this.nameError = undefined;
-                if (!this.name) this.nameError = 'Insira o nome completo do colaborador';
-            },
 
             genderCheck () {
                 this.genderError = undefined;
@@ -403,13 +403,13 @@
 
                 if (this.type == 'add') {
                     if (this.step) {
+                        this.nameCheck();
                         this.emailCheck();
                         this.passwordCheck();
                         this.cpfCheck();
-                        this.nameCheck();
                         this.genderCheck();
 
-                        if (!this.emailError && !this.passwordError && !this.cpfError && !this.nameError && !this.genderError) {
+                        if (!this.nameError && !this.emailError && !this.passwordError && !this.cpfError && !this.genderError) {
                             this.step = false;
                         }
 
@@ -446,21 +446,21 @@
                         });
 
                         dataCollaborator = {
-                            email       : this.email,
-                            password    : this.password,
-                            cpf         : this.cpf.replace(/[^0-9]/gm, ''),
-                            name        : this.name,
-                            gender      : this.gender,
-                            enabled     : this.enabled,
-                            permission  : permission
+                            name      : this.name,
+                            email     : this.email,
+                            password  : this.password,
+                            cpf       : this.cpf.replace(/[^0-9]/gm, ''),
+                            gender    : this.gender,
+                            enabled   : this.enabled,
+                            permission: permission
                         };
                         
-                        axios.post(`${Config.API_URL}/register/collaborator`, require('qs').stringify(dataCollaborator), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
+                        axios.post(`${Config.API_URL}/insert/collaborator`, require('qs').stringify(dataCollaborator), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
                             if (response.status == 200) {
+                                this.name     = undefined;
                                 this.email    = undefined;
                                 this.password = (Math.random() + 1).toString(36).substring(6);
                                 this.cpf      = undefined;
-                                this.name     = undefined;
                                 this.gender   = undefined;
                                 this.enabled  = 'true';
 
@@ -475,9 +475,8 @@
 
                         }).catch(err => {
                             if (err.message) {
-                                this.errorSnackbar.message = `Ocorreu um erro ao cadastrar o colaborador <b>${this.name}</b>, tente novamente mais tarde`;
+                                this.errorSnackbar.message = err.response.data.data.message;
 
-                                if (err.response.data.code == 'ER_DUP_ENTRY') this.errorSnackbar.message = 'CPF ou e-mail já existe';
                                 if (err.response.data.message == 'Invalid Data') this.errorSnackbar.message = 'Verifique os campos';
 
                                 this.errorSnackbar.model = true;
@@ -527,14 +526,14 @@
                         });
 
                         dataCollaborator = {
-                            id          : this.id,
-                            email       : this.email,
-                            password    : this.password,
-                            cpf         : this.cpf.replace(/[^0-9]/gm, ''),
-                            name        : this.name,
-                            gender      : this.gender,
-                            enabled     : this.enabled,
-                            permission  : permission
+                            id        : this.id,
+                            email     : this.email,
+                            password  : this.password,
+                            cpf       : this.cpf.replace(/[^0-9]/gm, ''),
+                            name      : this.name,
+                            gender    : this.gender,
+                            enabled   : this.enabled,
+                            permission: permission
                         };
                         
                         axios.post(`${Config.API_URL}/update/collaborator`, require('qs').stringify(dataCollaborator), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
@@ -559,9 +558,8 @@
 
                         }).catch(err => {
                             if (err.message) {
-                                this.errorSnackbar.message = `Ocorreu um erro ao atualizar o colaborador <b>${this.name}</b>, tente novamente mais tarde`;
+                                this.errorSnackbar.message = err.response.data.data.message;
 
-                                if (err.response.data.code == 'ER_DUP_ENTRY') this.errorSnackbar.message = 'CPF ou e-mail já existe';
                                 if (err.response.data.message == 'Invalid Data') this.errorSnackbar.message = 'Verifique os campos';
 
                                 this.errorSnackbar.model = true;

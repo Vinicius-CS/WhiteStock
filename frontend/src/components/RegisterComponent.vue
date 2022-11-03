@@ -405,14 +405,11 @@
               if (response.status == 200) {
                 this.$emit('login', 'Empresa cadastrada com sucesso', 'green');
                 this.$emit('close');
-              } else {
-                this.errorSnackbar.message = 'Ocorreu um erro ao se cadastrar, tente novamente mais tarde';
-                this.errorSnackbar.model = true;
               }
 
             }).catch(err => {
               if (err.message) {
-                this.errorSnackbar.message = 'Ocorreu um erro ao se cadastrar, tente novamente mais tarde';
+                this.errorSnackbar.message = err.response.data.data.message;
               
                 if (err.response.data.message == 'Invalid Data') this.errorSnackbar.message = 'Verifique os campos';
 

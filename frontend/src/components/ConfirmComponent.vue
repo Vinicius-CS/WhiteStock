@@ -46,8 +46,7 @@
     
     props: {
       title: String,
-      text : String,
-      textLoading: String,
+      text : String
     },
 
     methods: {

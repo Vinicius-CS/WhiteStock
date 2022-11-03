@@ -2,15 +2,15 @@
   <v-container class="content">
     <v-layout class="header d-flex flex-column">
       <div style="text-align: center">
-        <h3>Colaboradores</h3>
+        <h3>Categorias</h3>
       </div>
       <v-btn
-        v-if="this.$store.getters.hasPermission('collaborator', 'add')"
+        v-if="this.$store.getters.hasPermission('category', 'add')"
         style="position: absolute; right: 1rem;"
         class="btn btn_hover_1"
-        @click="typeComponent = 'add'; showCollaboratorComponent = true"
+        @click="typeComponent = 'add'; showCategoryComponent = true"
       >
-        Novo Colaborador
+        Nova Categoria
       </v-btn>
     </v-layout>
 
@@ -36,10 +36,7 @@
               Nome
             </th>
             <th class="text-center">
-              CPF
-            </th>
-            <th class="text-center">
-              E-Mail
+              Descrição
             </th>
             <th class="text-center">
               Habilitado
@@ -56,28 +53,27 @@
           >
             <td>{{ item.id }}</td>
             <td>{{ item.name }}</td>
-            <td>{{ item.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/g,"\$1.\$2.\$3\-\$4") }}</td>
-            <td>{{ item.email }}</td>
+            <td>{{ item.description }}</td>
             <td>{{ item.enabled == 'true' ? 'Sim' : 'Não' }}</td>
             <td>
               <v-btn
-                v-if="this.$store.getters.hasPermission('collaborator', 'view')"
+                v-if="this.$store.getters.hasPermission('category', 'view')"
                 style="margin-left: 0.3rem; margin-right: 0.3rem;"
                 size="x-small"
                 icon="mdi-eye"
                 color="grey"
-                @click="this.dataComponent = item; typeComponent = 'view'; showCollaboratorComponent = true"
+                @click="this.dataComponent = item; typeComponent = 'view'; showCategoryComponent = true"
               ></v-btn>
               <v-btn
-                v-if="this.$store.getters.hasPermission('collaborator', 'edit')"
+                v-if="this.$store.getters.hasPermission('category', 'edit')"
                 style="margin-left: 0.3rem; margin-right: 0.3rem;"
                 size="x-small"
                 icon="mdi-pencil"
                 color="grey"
-                @click="this.dataComponent = item; typeComponent = 'edit'; showCollaboratorComponent = true"
+                @click="this.dataComponent = item; typeComponent = 'edit'; showCategoryComponent = true"
               ></v-btn>
               <v-btn
-                v-if="this.$store.getters.hasPermission('collaborator', 'delete')"
+                v-if="this.$store.getters.hasPermission('category', 'delete')"
                 style="margin-left: 0.3rem; margin-right: 0.3rem;"
                 size="x-small"
                 icon="mdi-close-thick"
@@ -89,7 +85,7 @@
         </tbody>
       </v-table>
       <div style="padding: 1rem; font-size: 24px;" v-else>
-        Nenhum colaborador encontrado
+        Nenhuma categoria encontrada
       </div>
 
       <div class="text-center" style="padding-top: 1rem;" v-if="this.dataAll.length > 0">
@@ -102,8 +98,8 @@
         ></v-pagination>
       </div>
 
-      <ConfirmComponent v-model="showConfirmComponent" @close="showConfirmComponent = false" @confirm="deleteThis(this.deleteThisData); showConfirmComponent = false;" title="Exclusão de Colaborador" :text='"Tem certeza que deseja excluir o colaborador <b>" + this.deleteThisData.name + "</b>?"'/>
-      <CollaboratorComponent v-model="showCollaboratorComponent" @close="actionThis" :show="this.showCollaboratorComponent" :data="this.dataComponent" :type="this.typeComponent"/>
+      <ConfirmComponent v-model="showConfirmComponent" @close="showConfirmComponent = false" @confirm="deleteThis(this.deleteThisData); showConfirmComponent = false;" title="Exclusão de Categoria" :text='"Tem certeza que deseja excluir a categoria <b>" + this.deleteThisData.name + "</b>?"'/>
+      <CategoryComponent v-model="showCategoryComponent" @close="actionThis" :show="this.showCategoryComponent" :data="this.dataComponent" :type="this.typeComponent"/>
     </div>
   </v-container>
 </template>
@@ -112,14 +108,14 @@
     import router from '@/router';
     import Config from '@/assets/config.json';
     import ConfirmComponent from '@/components/ConfirmComponent.vue';
-    import CollaboratorComponent from '@/components/CollaboratorComponent.vue';
+    import CategoryComponent from '@/components/CategoryComponent.vue';
 
     export default {
-      name: 'CollaboratorPanel',
+      name: 'CategoryPanel',
 
       components: {
         ConfirmComponent,
-        CollaboratorComponent
+        CategoryComponent
       },
   
       data: () => ({
@@ -134,7 +130,7 @@
         lengthPage               : 1,
         perPage                  : 15,
         showConfirmComponent     : false,
-        showCollaboratorComponent: false,
+        showCategoryComponent: false,
 
         dataComponent: [],
         typeComponent: undefined,
@@ -157,22 +153,22 @@
 
       methods: {
         actionThis (value = null, item = null) {
-          if (value == 'registered') {
-            this.showCollaboratorComponent = false;
-            this.messageSnackbar.message = `O colaborador <b>${item.name}</b> foi cadastrado`;
+          if (value == 'inserted') {
+            this.showCategoryComponent = false;
+            this.messageSnackbar.message = `A categoria <b>${item.name}</b> foi cadastrada`;
             this.messageSnackbar.color = 'green';
             this.messageSnackbar.model = true;
             this.listThis();
             
           } else if (value == 'updated') {
-            this.showCollaboratorComponent = false;
-            this.messageSnackbar.message = `O colaborador <b>${item.name}</b> foi atualizado`;
+            this.showCategoryComponent = false;
+            this.messageSnackbar.message = `A categoria <b>${item.name}</b> foi atualizada`;
             this.messageSnackbar.color = 'green';
             this.messageSnackbar.model = true;
             this.listThis();
             
           } else {
-            this.showCollaboratorComponent = false;
+            this.showCategoryComponent = false;
           }
         },
 
@@ -182,9 +178,9 @@
             id: item.id,
           });
 
-          await axios.post(`${Config.API_URL}/delete/collaborator`, data, {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
+          await axios.post(`${Config.API_URL}/delete/category`, data, {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
             if (response.status == 200) {
-              this.messageSnackbar.message = `O colaborador <b>${item.name}</b> foi excluído`;
+              this.messageSnackbar.message = `A categoria <b>${item.name}</b> foi excluída`;
               this.messageSnackbar.color = 'green';
               this.messageSnackbar.model = true;
 
@@ -203,7 +199,7 @@
         async listThis () {
           const axios = require('axios').default;
 
-          await axios.get(`${Config.API_URL}/list/collaborator`, {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
+          await axios.get(`${Config.API_URL}/list/category`, {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
             if (response.status == 200) {
               this.dataAll = response.data;
               this.tableAjust();
@@ -244,7 +240,7 @@
       },
       
       beforeMount () {
-        if (this.$store.getters.hasPermission('collaborator', 'view')) {
+        if (this.$store.getters.hasPermission('category', 'view')) {
           this.permission = this.$store.state.permission;
           this.listThis();
 
