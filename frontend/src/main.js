@@ -7,6 +7,7 @@ import VueTheMask from 'vue-the-mask';
 import { createStore } from 'vuex';
 import Cookies from 'js-cookie';
 import VueJwtDecode from 'vue-jwt-decode';
+import VueApexCharts from "vue3-apexcharts";
 
 loadFonts();
 
@@ -50,8 +51,9 @@ const store = createStore({
 
 const app = createApp(App);
 
-app.use(router);
-app.use(VueTheMask)
-app.use(vuetify);
 app.use(store);
+app.use(router);
+app.use(VueTheMask);
+app.use(vuetify);
+app.use(VueApexCharts);
 app.mount('#app');

@@ -170,3 +170,12 @@ input[type=number] {
     min-width: 15rem;
     min-height: 10.5rem;
 }
+
+.apexcharts-tooltip, .apexcharts-tooltip-title {
+    background-color: #2D2D2D !important;
+    color: #ffffff;
+}
+
+.apexcharts-tooltip-marker {
+    background-color: #5CFFA6 !important;
+}
