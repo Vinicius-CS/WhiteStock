@@ -62,7 +62,7 @@
         sm="4"
       >
         <CardPriceComponent
-          @login="messageShow"
+          @login="this.showLoginComponent = true"
           :id="item.id"
           :title="item.title"
           :item="item.item"
@@ -75,15 +75,6 @@
       </v-col>
     </v-row>
   </v-container>
-
-  <v-snackbar
-    v-model="messageSnackbar.model"
-    :timeout="messageSnackbar.timeout"
-    :color="messageSnackbar.color"
-    elevation="24"
-  >
-    {{ messageSnackbar.message }}
-  </v-snackbar>
 </template>
 
 <style>
@@ -108,13 +99,6 @@
     data: () => ({
       showLoginComponent: false,
       billingType       : false,
-
-      messageSnackbar: {
-        model  : false,
-        color  : 'black',
-        message: '',
-        timeout: 5000
-      },
 
       cardInfo: [
         {
@@ -220,13 +204,6 @@
     }),
 
     methods: {
-      messageShow (message, color) {
-        this.messageSnackbar.model = true;
-        this.messageSnackbar.message = message;
-        this.messageSnackbar.color = color;
-        this.showLoginComponent = true
-      },
-
       checkLogged () {
         if (this.$store.state.token != null) return true;
         return false;

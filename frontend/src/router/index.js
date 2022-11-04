@@ -1,9 +1,10 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import IndexPage from '@/views/Index.vue'
-import HomePanel from '@/views/panel/Home.vue'
-import CollaboratorPanel from '@/views/panel/Collaborator.vue'
-import ProductPanel from '@/views/panel/Product.vue'
-import CategoryPanel from '@/views/panel/Category.vue'
+import { createRouter, createWebHistory } from 'vue-router';
+import IndexPage from '@/views/Index.vue';
+import HomePanel from '@/views/panel/Home.vue';
+import CollaboratorPanel from '@/views/panel/Collaborator.vue';
+import ProductPanel from '@/views/panel/Product.vue';
+import CategoryPanel from '@/views/panel/Category.vue';
+import CompanyPanel from '@/views/panel/Company.vue';
 
 const routes = [
   {
@@ -30,6 +31,11 @@ const routes = [
     path: '/panel/product-category',
     name: 'category',
     component: CategoryPanel
+  },
+  {
+    path: '/panel/company',
+    name: 'company',
+    component: CompanyPanel
   },
 ]
 

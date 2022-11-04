@@ -14,15 +14,6 @@
       </v-btn>
     </v-layout>
 
-    <v-snackbar
-      v-model="messageSnackbar.model"
-      :timeout="messageSnackbar.timeout"
-      :color="messageSnackbar.color"
-      elevation="24"
-    >
-      <div v-html="messageSnackbar.message"></div>
-    </v-snackbar>
-
     <v-divider color="grey" style="margin-top: 1rem"></v-divider>
 
     <div>
@@ -103,7 +94,7 @@
       </div>
 
       <ConfirmComponent v-model="showConfirmComponent" @close="showConfirmComponent = false" @confirm="deleteThis(this.deleteThisData); showConfirmComponent = false;" title="Exclusão de Colaborador" :text='"Tem certeza que deseja excluir o colaborador <b>" + this.deleteThisData.name + "</b>?"'/>
-      <CollaboratorComponent v-model="showCollaboratorComponent" @close="actionThis" :show="this.showCollaboratorComponent" :data="this.dataComponent" :type="this.typeComponent"/>
+      <CollaboratorComponent v-model="showCollaboratorComponent" @close="this.showCollaboratorComponent = false; listThis()" :show="this.showCollaboratorComponent" :data="this.dataComponent" :type="this.typeComponent"/>
     </div>
   </v-container>
 </template>
@@ -123,13 +114,6 @@
       },
   
       data: () => ({
-        permission: {
-          view   : 0,
-          add    : 0,
-          edit   : 0,
-          delete : 0
-        },
-
         page                     : 1,
         lengthPage               : 1,
         perPage                  : 15,
@@ -139,16 +123,8 @@
         dataComponent: [],
         typeComponent: undefined,
 
-
         dataAll  : [],
         tableData: [],
-
-        messageSnackbar: {
-          model  : false,
-          color  : 'black',
-          message: undefined,
-          timeout: 5000
-        },
 
         deleteThisData: {
           name: null
@@ -156,26 +132,6 @@
       }),
 
       methods: {
-        actionThis (value = null, item = null) {
-          if (value == 'registered') {
-            this.showCollaboratorComponent = false;
-            this.messageSnackbar.message = `O colaborador <b>${item.name}</b> foi cadastrado`;
-            this.messageSnackbar.color = 'green';
-            this.messageSnackbar.model = true;
-            this.listThis();
-            
-          } else if (value == 'updated') {
-            this.showCollaboratorComponent = false;
-            this.messageSnackbar.message = `O colaborador <b>${item.name}</b> foi atualizado`;
-            this.messageSnackbar.color = 'green';
-            this.messageSnackbar.model = true;
-            this.listThis();
-            
-          } else {
-            this.showCollaboratorComponent = false;
-          }
-        },
-
         async deleteThis (item) {
           const axios = require('axios').default;
           var data = require('qs').stringify({
@@ -184,9 +140,7 @@
 
           await axios.post(`${Config.API_URL}/delete/collaborator`, data, {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
             if (response.status == 200) {
-              this.messageSnackbar.message = `O colaborador <b>${item.name}</b> foi excluído`;
-              this.messageSnackbar.color = 'green';
-              this.messageSnackbar.model = true;
+              this.$root.messageShow(`${this.gender == 'male' ? 'O colaborador' : 'A colaboradora'} <b>${item.name}</b> foi ${this.gender == 'male' ? 'excluído' : 'excluída'}`, 'green');
 
               this.dataAll.splice(this.dataAll.findIndex(value => value.id == item.id), 1);
               this.tableAjust();
@@ -194,8 +148,8 @@
 
           }).catch(err => {
             if (err.message) {
-              console.log(err);
-              this.messageShow(err.response.data.data.message, 'red');
+              console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);
+              this.$root.messageShow(`Ocorreu um erro ao excluir ${item.gender == 'male' ? `o colaborador <b>${item.name}</b>` : `a colaboradora <b>${item.name}</b>`}`, 'red');
             }
           });
         },
@@ -211,8 +165,8 @@
 
           }).catch(err => {
             if (err.message) {
-              console.log(err);
-              this.messageShow(err.response.data.data.message, 'red');
+              console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);
+              this.$root.messageShow(`Ocorreu um erro ao listar os colaboradores`, 'red');
             }
           });
 
@@ -229,23 +183,15 @@
             this.lengthPage++;
           }
 
-
           this.tableData = [];
           for (let i = itemIndex; i < j && z > 0; i++, z--) {
             this.tableData.push(this.dataAll[i]);
           }
-        },
-
-        messageShow (message, color) {
-          this.messageSnackbar.model   = true;
-          this.messageSnackbar.message = message;
-          this.messageSnackbar.color   = color;
         }
       },
       
       beforeMount () {
         if (this.$store.getters.hasPermission('collaborator', 'view')) {
-          this.permission = this.$store.state.permission;
           this.listThis();
 
         } else {

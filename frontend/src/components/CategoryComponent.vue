@@ -21,15 +21,6 @@
                     mdi-close-circle
                 </v-icon>
             </v-layout>
-    
-            <v-snackbar
-                v-model="errorSnackbar.model"
-                :timeout="5000"
-                color="red"
-                elevation="24"
-            >
-                <div v-html="errorSnackbar.message"></div>
-            </v-snackbar>
   
             <v-card-text>
                 <v-form
@@ -72,6 +63,7 @@
                             class="btn btn_hover_0"
                             append-icon="mdi-chevron-double-right"
                             @click="register"
+                            :disabled="this.type == 'edit' ? this.changeDisabled : false"
                         >
                             {{ this.type == 'add' ? 'Inserir' : 'Salvar' }}
                         </v-btn>
@@ -99,21 +91,19 @@
         },
   
         data: () => ({
-            id         : undefined,
-            name       : undefined,
-            description: undefined,
-            photo      : undefined,
-            enabled    : 'true',
+            id            : undefined,
+            name          : undefined,
+            description   : undefined,
+            photo         : undefined,
+            enabled       : 'true',
+
+            response      : undefined,
+            changeDisabled: false,
 
             itemEnabled: [
                 { key: 'true', value: 'Sim' },
                 { key: 'false', value: 'Não' }
             ],
-    
-            errorSnackbar: {
-                model  : false,
-                message: undefined
-            },
     
             nameError       : undefined,
             descriptionError: undefined,
@@ -123,6 +113,7 @@
         watch: {
             show () {
                 if (this.show && (this.type == 'view' || this.type == 'edit')) {
+                    this.response    = this.data;
                     this.id          = this.data.id;
                     this.name        = this.data.name;
                     this.description = this.data.description;
@@ -142,6 +133,10 @@
             description () {
                 if (this.type == 'view') return '';
                 this.descriptionCheck();
+            },
+
+            enabled () {
+                this.changeCheck();
             }
         },
   
@@ -159,6 +154,7 @@
             nameCheck () {
                 this.nameError = undefined;
                 if (!this.name) this.nameError = 'Insira o nome do produto';
+                this.changeCheck();
             },
 
             descriptionCheck () {
@@ -170,7 +166,16 @@
                 } else if (this.description.length > 50) {
                     this.descriptionError = 'Descrição muito grande, insira até 50 caracteres';
                 }
+                this.changeCheck();
+            },
 
+            changeCheck () {
+                if (this.type != 'edit') return;
+                if (this.response.name != this.name || this.response.description != this.description || this.response.enabled != this.enabled) {
+                    this.changeDisabled = false;
+                } else {
+                    this.changeDisabled = true;
+                }
             },
 
             register () {
@@ -190,20 +195,14 @@
                     
                     axios.post(`${Config.API_URL}/${this.type == 'add' ? 'insert' : 'update'}/category`, require('qs').stringify(dataCategory), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
                         if (response.status == 200) {
-                            this.id          = undefined;
-                            this.name        = undefined;
-                            this.description = undefined;
-                            this.enabled     = 'true';
-
-                            this.$emit('close', this.type == 'add' ? 'inserted' : 'updated', dataCategory);
+                            this.$root.messageShow(`A categoria <b>${this.name}</b> foi ${this.type == 'add' ? 'cadastrada' : 'atualizada'}`, 'green');
+                            this.$emit('close');
                         }
 
                     }).catch(err => {
                         if (err.message) {
-                            this.errorSnackbar.message = err.response.data.data.message;
-
-                            this.errorSnackbar.model = true;
-                            console.log(err);
+                            console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);
+                            this.$root.messageShow(`Ocorreu um erro ao ${this.type == 'add' ? 'inserir a' : 'atualizar os dados da'} categoria <b>${this.name}</b>`, 'red');
                         }
                     });
 

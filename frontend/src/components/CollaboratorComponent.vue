@@ -21,15 +21,6 @@
                     mdi-close-circle
                 </v-icon>
             </v-layout>
-    
-            <v-snackbar
-                v-model="errorSnackbar.model"
-                :timeout="5000"
-                color="red"
-                elevation="24"
-            >
-                <div v-html="errorSnackbar.message"></div>
-            </v-snackbar>
   
             <v-card-text>
                 <v-form
@@ -189,6 +180,7 @@
                             class="btn btn_hover_0"
                             append-icon="mdi-chevron-double-right"
                             @click="register"
+                            :disabled="this.type == 'edit' ? this.changeDisabled : false"
                         >
                             {{ this.type == 'add' ? 'Cadastrar' : 'Salvar' }}
                         </v-btn>
@@ -249,11 +241,6 @@
                 { key: 'delete', value: 'Deletar' },
             ],
     
-            errorSnackbar: {
-                model  : false,
-                message: undefined
-            },
-    
             nameError    : undefined,
             emailError   : undefined,
             passwordError: undefined,
@@ -265,6 +252,7 @@
         watch: {
             show () {
                 if (this.show && (this.type == 'view' || this.type == 'edit')) {
+                    this.response = this.data;
                     this.id       = this.data.id;
                     this.name     = this.data.name;
                     this.email    = this.data.email;
@@ -273,7 +261,14 @@
                     this.gender   = this.data.gender;
                     this.enabled  = this.data.enabled;
 
-                    const permission = JSON.parse(this.data.permission);
+                    var permission = null;
+
+                    try {
+                        permission = JSON.parse(this.data.permission);
+                    } catch (e) {
+                        permission = this.data.permission;
+                    }
+
                     if (permission['collaborator']['view'] == 1) this.collaborator.push('view');
                     if (permission['collaborator']['add'] == 1) this.collaborator.push('add');
                     if (permission['collaborator']['edit'] == 1) this.collaborator.push('edit');
@@ -293,6 +288,8 @@
                     if (permission['company']['add'] == 1) this.company.push('add');
                     if (permission['company']['edit'] == 1) this.company.push('edit');
                     if (permission['company']['delete'] == 1) this.company.push('delete');
+
+                    this.response.permission = permission;
                 }
 
                 this.password = this.type == 'add' ? (Math.random() + 1).toString(36).substring(6) : undefined;
@@ -328,6 +325,26 @@
             gender () {
                 if (this.type == 'view') return '';
                 this.genderCheck();
+            },
+
+            enabled () {
+                this.changeCheck();
+            },
+
+            collaborator () {
+                this.changeCheck();
+            },
+
+            product () {
+                this.changeCheck();
+            },
+
+            category () {
+                this.changeCheck();
+            },
+
+            company () {
+                this.changeCheck();
             }
         },
   
@@ -354,6 +371,7 @@
             nameCheck () {
                 this.nameError = undefined;
                 if (!this.name) this.nameError = 'Insira o nome completo do colaborador';
+                this.changeCheck();
             },
     
             emailCheck () {
@@ -364,6 +382,7 @@
                 } else if (!this.email.match(/^[a-z0-9-_.]+@[a-z0-9]+\.[a-z]+/i)) {
                     this.emailError = 'E-mail inválido';
                 }
+                this.changeCheck();
             },
     
             passwordCheck () {
@@ -371,9 +390,12 @@
                 if (this.type == 'add' && !this.password) {
                     this.passwordError = 'Insira a senha';
         
-                } else if (this.password != undefined && this.password.length < 6) {
+                } else if (this.type == 'add' && this.password != undefined && this.password.length < 6) {
+                    this.passwordError = 'Senha muito curta, insira ao menos 6 caracteres';
+                } else if (this.password != undefined && this.password.length > 0 && this.password.length < 6) {
                     this.passwordError = 'Senha muito curta, insira ao menos 6 caracteres';
                 }
+                this.changeCheck();
             },
 
             cpfCheck () {
@@ -384,11 +406,56 @@
                 } else if (this.cpf.length < 14) {
                     this.cpfError = 'CPF inválido';
                 }
+                this.changeCheck();
             },
 
             genderCheck () {
                 this.genderError = undefined;
                 if (!this.gender) this.genderError = 'Selecione o gênero do colaborador';
+                this.changeCheck();
+            },
+
+            changeCheck () {
+                if (this.type != 'edit') return;
+                
+                const permission           = {};
+                permission['collaborator'] = {};
+                permission['product']      = {};
+                permission['category']     = {};
+                permission['company']      = {};
+
+                this.itemPermission.forEach(item => {
+                    if (this.collaborator.filter(permission => permission == item.key)[0] == undefined) {
+                        permission['collaborator'][item.key] = "0";
+                    } else {
+                        permission['collaborator'][item.key] = "1";
+                    }
+
+                    if (this.product.filter(permission => permission == item.key)[0] == undefined) {
+                        permission['product'][item.key] = "0";
+                    } else {
+                        permission['product'][item.key] = "1";
+                    }
+
+                    if (this.category.filter(permission => permission == item.key)[0] == undefined) {
+                        permission['category'][item.key] = "0";
+                    } else {
+                        permission['category'][item.key] = "1";
+                    }
+
+                    if (this.company.filter(permission => permission == item.key)[0] == undefined) {
+                        permission['company'][item.key] = "0";
+                    } else {
+                        permission['company'][item.key] = "1";
+                    }
+                });
+
+                
+                if (this.response.name != this.name || this.response.email != this.email || (this.password != undefined && this.password.length > 0) || this.response.cpf != this.cpf.replace(/[^0-9]/g, '') || this.response.gender != this.gender || this.response.enabled != this.enabled || JSON.stringify(this.response.permission) != JSON.stringify(permission)) {
+                    this.changeDisabled = false;
+                } else {
+                    this.changeDisabled = true;
+                }
             },
     
             register () {
@@ -457,30 +524,19 @@
                         
                         axios.post(`${Config.API_URL}/insert/collaborator`, require('qs').stringify(dataCollaborator), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
                             if (response.status == 200) {
-                                this.name     = undefined;
-                                this.email    = undefined;
-                                this.password = (Math.random() + 1).toString(36).substring(6);
-                                this.cpf      = undefined;
-                                this.gender   = undefined;
-                                this.enabled  = 'true';
-
-                                this.collaborator = [];
-                                this.product      = [];
-                                this.category     = [];
-                                this.company      = [];
-                                this.permission   = [];
-
-                                this.$emit('close', 'registered', dataCollaborator);
+                                this.$root.messageShow(`${this.gender == 'male' ? `O colaborador <b>${this.name}</b> foi ${this.type == 'add' ? 'cadastrado' : 'atualizado'}` : `A colaboradora <b>${this.name}</b> foi ${this.type == 'add' ? 'cadastrada' : 'atualizada'}`}`, 'green')
+                                this.$emit('close');
                             }
 
                         }).catch(err => {
                             if (err.message) {
-                                this.errorSnackbar.message = err.response.data.data.message;
+                                var message = `Ocorreu um erro ao cadastrar ${this.gender == 'male' ? 'o colaborador' : 'a colaboradora'} <b>${this.name}</b>`;
+                                if (err.response.data.message == 'Invalid Data') message = 'Verifique os campos';
+                                if (err.response.data.code == 1062) message = `E-mail ou CNPJ em uso`;
 
-                                if (err.response.data.message == 'Invalid Data') this.errorSnackbar.message = 'Verifique os campos';
 
-                                this.errorSnackbar.model = true;
-                                console.log(err);
+                                console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);
+                                this.$root.messageShow(message, 'red');
                             }
                         });
 
@@ -558,12 +614,12 @@
 
                         }).catch(err => {
                             if (err.message) {
-                                this.errorSnackbar.message = err.response.data.data.message;
+                                var message = `Ocorreu um erro ao atualizar os dados ${this.gender == 'male' ? 'do colaborador' : 'da colaboradora'} <b>${this.name}</b>`;
+                                if (err.response.data.message == 'Invalid Data') message = 'Verifique os campos';
+                                if (err.response.data.code == 1062) message = `E-mail ou CNPJ em uso`;
 
-                                if (err.response.data.message == 'Invalid Data') this.errorSnackbar.message = 'Verifique os campos';
-
-                                this.errorSnackbar.model = true;
-                                console.log(err);
+                                console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);
+                                this.$root.messageShow(message, 'red');
                             }
                         });
 

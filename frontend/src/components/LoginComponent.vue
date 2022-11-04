@@ -109,13 +109,13 @@
 
           }).catch(err => {
             if (err.message) {
-              this.errorSnackbar.message = err.response.data.data.message;
+              this.errorSnackbar.message = `Ocorreu um erro ao entrar`;
               
               if (err.response.data.message == 'Invalid Account') this.errorSnackbar.message = 'E-mail ou senha inválidos';
               if (err.response.data.message == 'Disabled Account') this.errorSnackbar.message = 'Esta conta está desabilitada';
 
               this.errorSnackbar.model = true;
-              console.log(err);
+              console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);
             }
           });
         } else {

@@ -21,15 +21,6 @@
         </v-icon>
       </v-layout>
 
-      <v-snackbar
-        v-model="errorSnackbar.model"
-        :timeout="5000"
-        color="red"
-        elevation="24"
-      >
-        <div v-html="errorSnackbar.message"></div>
-      </v-snackbar>
-
       <v-card-text>
         <v-form
           ref="form"
@@ -196,20 +187,15 @@
       expirateDate  : undefined,
       cardName      : undefined,
 
-      errorSnackbar: {
-        model  : false,
-        message: undefined
-      },
-
-      nameCompanyError    : undefined,
-      addressCompanyError : undefined,
-      cnpjError           : undefined,
-      emailError          : undefined,
-      passwordError       : undefined,
-      cardNumberError     : undefined,
-      cvvError            : undefined,
-      expirateDateError   : undefined,
-      cardNameError       : undefined,
+      nameCompanyError   : undefined,
+      addressCompanyError: undefined,
+      cnpjError          : undefined,
+      emailError         : undefined,
+      passwordError      : undefined,
+      cardNumberError    : undefined,
+      cvvError           : undefined,
+      expirateDateError  : undefined,
+      cardNameError      : undefined,
     }),
 
     watch: {
@@ -403,18 +389,19 @@
 
             axios.post(`${Config.API_URL}/register`, data, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then(response => {
               if (response.status == 200) {
-                this.$emit('login', 'Empresa cadastrada com sucesso', 'green');
+                this.$root.messageShow('Empresa cadastrada com sucesso', 'green');
+                this.$emit('login');
                 this.$emit('close');
               }
 
             }).catch(err => {
               if (err.message) {
-                this.errorSnackbar.message = err.response.data.data.message;
-              
-                if (err.response.data.message == 'Invalid Data') this.errorSnackbar.message = 'Verifique os campos';
+                var message = `Ocorreu um erro ao se cadastrar`;
+                if (err.response.data.message == 'Invalid Data') message = 'Verifique os campos';
+                if (err.response.data.code == 1062) message = `E-mail ou CNPJ em uso`;
 
-                this.errorSnackbar.model = true;
-                console.log(err);
+                console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);
+                this.$root.messageShow(message, 'red');
               }
             });
           }

@@ -21,15 +21,6 @@
                     mdi-close-circle
                 </v-icon>
             </v-layout>
-    
-            <v-snackbar
-                v-model="errorSnackbar.model"
-                :timeout="5000"
-                color="red"
-                elevation="24"
-            >
-                <div v-html="errorSnackbar.message"></div>
-            </v-snackbar>
   
             <v-card-text>
                 <v-form
@@ -91,6 +82,7 @@
                             class="btn btn_hover_0"
                             append-icon="mdi-chevron-double-right"
                             @click="register"
+                            :disabled="this.type == 'edit' ? this.changeDisabled : false"
                         >
                             {{ this.type == 'add' ? 'Inserir' : 'Salvar' }}
                         </v-btn>
@@ -118,13 +110,16 @@
         },
   
         data: () => ({
-            id         : undefined,
-            name       : undefined,
-            description: undefined,
-            photo      : undefined,
-            stock      : undefined,
-            category   : undefined,
-            enabled    : 'true',
+            id            : undefined,
+            name          : undefined,
+            description   : undefined,
+            photo         : undefined,
+            stock         : undefined,
+            category      : undefined,
+            enabled       : 'true',
+
+            response      : undefined,
+            changeDisabled: true,
 
             itemEnabled: [
                 { key: 'true', value: 'Sim' },
@@ -132,11 +127,6 @@
             ],
 
             itemCategory: [],
-    
-            errorSnackbar: {
-                model  : false,
-                message: undefined
-            },
     
             nameError       : undefined,
             descriptionError: undefined,
@@ -149,6 +139,7 @@
                 this.category = this.itemCategory[0];
                 
                 if (this.show && (this.type == 'view' || this.type == 'edit')) {
+                    this.response    = this.data;
                     this.id          = this.data.id;
                     this.name        = this.data.name;
                     this.description = this.data.description;
@@ -176,6 +167,10 @@
             stock () {
                 if (this.type == 'view') return '';
                 this.stockCheck();
+            },
+
+            enabled () {
+                this.changeCheck();
             }
         },
   
@@ -195,6 +190,7 @@
             nameCheck () {
                 this.nameError = undefined;
                 if (!this.name) this.nameError = 'Insira o nome do produto';
+                this.changeCheck();
             },
 
             descriptionCheck () {
@@ -206,7 +202,7 @@
                 } else if (this.description.length > 50) {
                     this.descriptionError = 'Descrição muito grande, insira até 50 caracteres';
                 }
-
+                this.changeCheck();
             },
 
             stockCheck () {
@@ -216,7 +212,16 @@
                 } else if (this.stock < 0) {
                     this.stockError = 'A quantidade em estoque não pode ser um número negativo';
                 }
+                this.changeCheck();
+            },
 
+            changeCheck () {
+                if (this.type != 'edit') return;
+                if (this.response.name != this.name || this.response.description != this.description || this.response.stock != this.stock || this.response.category_id != this.category || this.response.enabled != this.enabled) {
+                    this.changeDisabled = false;
+                } else {
+                    this.changeDisabled = true;
+                }
             },
 
             register () {
@@ -238,22 +243,14 @@
                     
                     axios.post(`${Config.API_URL}/${this.type == 'add' ? 'insert' : 'update'}/product`, require('qs').stringify(dataProduct), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
                         if (response.status == 200) {
-                            this.id          = undefined;
-                            this.name        = undefined;
-                            this.description = undefined;
-                            this.stock       = undefined;
-                            this.category    = undefined;
-                            this.enabled     = 'true';
-
-                            this.$emit('close', this.type == 'add' ? 'inserted' : 'updated', dataProduct);
+                            this.$root.messageShow(`O produto <b>${this.name}</b> foi ${this.type == 'add' ? 'cadastrado' : 'atualizado'}`, 'red')
+                            this.$emit('close');
                         }
 
                     }).catch(err => {
                         if (err.message) {
-                            this.errorSnackbar.message = err.response.data.data.message;
-
-                            this.errorSnackbar.model = true;
-                            console.log(err);
+                            console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);
+                            this.$root.messageShow(`Ocorreu um erro ao ${this.type == 'add' ? 'inserir o' : 'atualizar os dados do'} produto <b>${this.name}</b>`, 'red');
                         }
                     });
 
@@ -271,8 +268,8 @@
 
             }).catch(err => {
                 if (err.message) {
-                    console.log(err);
-                    this.messageShow(err.response.data.data.message, 'red');
+                    console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);
+                    this.$root.messageShow(`Ocorreu um erro ao listar as categorias`, 'red');
                 }
             });
         }

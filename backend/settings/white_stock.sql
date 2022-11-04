@@ -20,22 +20,8 @@ CREATE TABLE IF NOT EXISTS plan (
   description VARCHAR(255) NOT NULL,
   month_price decimal(7,2) NOT NULL,
   year_price decimal(7,2) NOT NULL,
+  resource JSON NOT NULL DEFAULT '{"collaborator":"0","product":"0","automation":"false","customization":"false"}',
   enabled ENUM('true','false') NOT NULL DEFAULT 'true'
-);
-
-CREATE TABLE IF NOT EXISTS resource (
-  id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255) NOT NULL UNIQUE,
-  description VARCHAR(255) NOT NULL,
-  enabled ENUM('true','false') NOT NULL DEFAULT 'true'
-);
-
-CREATE TABLE IF NOT EXISTS plan_resource (
-  id int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  plan_id int(11) NOT NULL,
-  resource_id int(11) NOT NULL,
-  enabled ENUM('true','false') NOT NULL DEFAULT 'true',
-  FOREIGN KEY (resource_id) REFERENCES resource(id)
 );
 
 CREATE TABLE IF NOT EXISTS collaborator (

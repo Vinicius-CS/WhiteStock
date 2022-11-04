@@ -14,15 +14,6 @@
       </v-btn>
     </v-layout>
 
-    <v-snackbar
-      v-model="messageSnackbar.model"
-      :timeout="messageSnackbar.timeout"
-      :color="messageSnackbar.color"
-      elevation="24"
-    >
-      <div v-html="messageSnackbar.message"></div>
-    </v-snackbar>
-
     <v-divider color="grey" style="margin-top: 1rem"></v-divider>
 
     <div>
@@ -99,7 +90,7 @@
       </div>
 
       <ConfirmComponent v-model="showConfirmComponent" @close="showConfirmComponent = false" @confirm="deleteThis(this.deleteThisData); showConfirmComponent = false;" title="Exclusão de Categoria" :text='"Tem certeza que deseja excluir a categoria <b>" + this.deleteThisData.name + "</b>?"'/>
-      <CategoryComponent v-model="showCategoryComponent" @close="actionThis" :show="this.showCategoryComponent" :data="this.dataComponent" :type="this.typeComponent"/>
+      <CategoryComponent v-model="showCategoryComponent" @close="this.showCategoryComponent = false; listThis()" :show="this.showCategoryComponent" :data="this.dataComponent" :type="this.typeComponent"/>
     </div>
   </v-container>
 </template>
@@ -119,32 +110,17 @@
       },
   
       data: () => ({
-        permission: {
-          view   : 0,
-          add    : 0,
-          edit   : 0,
-          delete : 0
-        },
-
-        page                     : 1,
-        lengthPage               : 1,
-        perPage                  : 15,
-        showConfirmComponent     : false,
+        page                 : 1,
+        lengthPage           : 1,
+        perPage              : 15,
+        showConfirmComponent : false,
         showCategoryComponent: false,
 
         dataComponent: [],
         typeComponent: undefined,
 
-
         dataAll  : [],
         tableData: [],
-
-        messageSnackbar: {
-          model  : false,
-          color  : 'black',
-          message: undefined,
-          timeout: 5000
-        },
 
         deleteThisData: {
           name: null
@@ -152,26 +128,6 @@
       }),
 
       methods: {
-        actionThis (value = null, item = null) {
-          if (value == 'inserted') {
-            this.showCategoryComponent = false;
-            this.messageSnackbar.message = `A categoria <b>${item.name}</b> foi cadastrada`;
-            this.messageSnackbar.color = 'green';
-            this.messageSnackbar.model = true;
-            this.listThis();
-            
-          } else if (value == 'updated') {
-            this.showCategoryComponent = false;
-            this.messageSnackbar.message = `A categoria <b>${item.name}</b> foi atualizada`;
-            this.messageSnackbar.color = 'green';
-            this.messageSnackbar.model = true;
-            this.listThis();
-            
-          } else {
-            this.showCategoryComponent = false;
-          }
-        },
-
         async deleteThis (item) {
           const axios = require('axios').default;
           var data = require('qs').stringify({
@@ -180,18 +136,18 @@
 
           await axios.post(`${Config.API_URL}/delete/category`, data, {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
             if (response.status == 200) {
-              this.messageSnackbar.message = `A categoria <b>${item.name}</b> foi excluída`;
-              this.messageSnackbar.color = 'green';
-              this.messageSnackbar.model = true;
-
+              this.$root.messageShow(`A categoria <b>${item.name}</b> foi excluída`, 'green');
               this.dataAll.splice(this.dataAll.findIndex(value => value.id == item.id), 1);
               this.tableAjust();
             }
 
           }).catch(err => {
             if (err.message) {
-              console.log(err);
-              this.messageShow(err.response.data.data.message, 'red');
+              var message = `Ocorreu um erro ao axcluir a categoria <b>${item.name}</b>`;
+              if (err.response.data.code == 1451) message = `Não é possível excluir, a categoria <b>${item.name}</b> está em uso`;
+
+              console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);
+              this.$root.messageShow(message, 'red');
             }
           });
         },
@@ -207,8 +163,8 @@
 
           }).catch(err => {
             if (err.message) {
-              console.log(err);
-              this.messageShow(err.response.data.data.message, 'red');
+              console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);
+              this.$root.messageShow(`Ocorreu um erro ao listar as categorias`, 'red');
             }
           });
 
@@ -225,23 +181,15 @@
             this.lengthPage++;
           }
 
-
           this.tableData = [];
           for (let i = itemIndex; i < j && z > 0; i++, z--) {
             this.tableData.push(this.dataAll[i]);
           }
-        },
-
-        messageShow (message, color) {
-          this.messageSnackbar.model   = true;
-          this.messageSnackbar.message = message;
-          this.messageSnackbar.color   = color;
         }
       },
       
       beforeMount () {
         if (this.$store.getters.hasPermission('category', 'view')) {
-          this.permission = this.$store.state.permission;
           this.listThis();
 
         } else {
