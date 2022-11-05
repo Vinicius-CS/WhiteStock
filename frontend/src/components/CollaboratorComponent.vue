@@ -350,8 +350,6 @@
   
         methods: {
             closeDialog () {
-                this.$emit('close');
-
                 this.step     = true;
                 this.id       = undefined;
                 this.name     = undefined;
@@ -366,6 +364,8 @@
                 this.category     = [];
                 this.company      = [];
                 this.permission   = [];
+
+                this.$emit('close');
             },
 
             nameCheck () {

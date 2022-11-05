@@ -251,8 +251,6 @@
 
     methods: {
       closeDialog () {
-        this.$emit('close');
-
         this.step           = true;
         this.nameCompany    = undefined;
         this.addressCompany = undefined;
@@ -263,6 +261,8 @@
         this.cvv            = undefined;
         this.expirateDate   = undefined;
         this.cardName       = undefined;
+
+        this.$emit('close');
       },
 
       expirateDateFormat (value) {

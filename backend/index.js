@@ -215,6 +215,22 @@ app.get(`${Config.PATH}/list/company`, verifyJWT, (req, res, next) => {
   });
 });
 
+/*-------------------- GET - CHART --------------------*/
+
+app.get(`${Config.PATH}/chart/product`, verifyJWT, (req, res, next) => {
+  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
+
+  db.query(`SELECT name, stock FROM product WHERE enabled = 'true' AND company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' ORDER BY stock ASC LIMIT 6`, function (err, result, fields) {
+    if (err) {
+      console.error({ info: `Error Product List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
+      return res.status(500).send({ message: 'Server Error', code: err.errno });
+    }
+
+    if (result.length <= 0) return res.status(204).send();
+    return res.status(200).send(result);
+  });
+});
+
 /*-------------------- INSERT --------------------*/
 
 app.post(`${Config.PATH}/insert/collaborator`, verifyJWT, (req, res, next) => {

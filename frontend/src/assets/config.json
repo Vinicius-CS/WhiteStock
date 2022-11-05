@@ -1,4 +1,4 @@
 {
-    "API_URL": "http://localhost:4001",
+    "API_URL": "http://10.150.48.27:4001",
     "API_URL_CHECK": "https://www.4devs.com.br/ferramentas_online.php"
 }

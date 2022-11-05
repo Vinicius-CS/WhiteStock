@@ -176,6 +176,6 @@ input[type=number] {
     color: #ffffff;
 }
 
-.apexcharts-tooltip-marker {
+.lineChart .apexcharts-tooltip-marker {
     background-color: #5CFFA6 !important;
 }

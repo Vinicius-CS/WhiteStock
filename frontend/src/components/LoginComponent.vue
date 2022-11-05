@@ -86,9 +86,10 @@
 
     methods: {
       closeDialog () {
-        this.$emit('close');
         this.email    = undefined;
         this.password = undefined;
+
+        this.$emit('close');
       },
 
       login () {

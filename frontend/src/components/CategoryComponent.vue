@@ -142,13 +142,13 @@
   
         methods: {
             closeDialog () {
-                this.$emit('close');
-
                 this.id          = undefined;
                 this.name        = undefined;
                 this.description = undefined;
                 this.photo       = undefined;
                 this.enabled     = 'true';
+
+                this.$emit('close');
             },
     
             nameCheck () {
