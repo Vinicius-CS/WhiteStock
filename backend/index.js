@@ -75,14 +75,14 @@ app.post(`${Config.PATH}/login`, (req, res, next) => {
     return res.status(401).send({ message: 'Invalid Data' });
   }
 
-  db.query(`SELECT * FROM collaborator WHERE email = '${req.body.email.toLowerCase()}' AND password = MD5('${req.body.password}')`, function (err, result, fields) {
+  db.query(`SELECT * FROM collaborator WHERE enabled = 'true' AND deleted_at IS NULL AND email = '${req.body.email.toLowerCase()}' AND password = MD5('${req.body.password}')`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Login`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error' });
     }
 
     if (result.length <= 0) {
-      db.query(`SELECT * FROM company WHERE email = '${req.body.email.toLowerCase()}' AND password = MD5('${req.body.password}')`, function (err, result, fields) {
+      db.query(`SELECT * FROM company WHERE enabled = 'true' AND deleted_at IS NULL AND email = '${req.body.email.toLowerCase()}' AND password = MD5('${req.body.password}')`, function (err, result, fields) {
         if (err) {
           console.error({ info: `Error Login`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
           return res.status(500).send({ message: 'Server Error' });
@@ -161,7 +161,7 @@ app.post(`${Config.PATH}/register`, (req, res, next) => {
 app.get(`${Config.PATH}/list/collaborator`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT collaborator.id, collaborator.name, collaborator.email, collaborator.cpf, collaborator.gender, collaborator.photo, collaborator.enabled, collaborator.permission, company.name AS company_name FROM collaborator LEFT JOIN company ON company.id = collaborator.company_id WHERE collaborator.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
+  db.query(`SELECT collaborator.id, collaborator.name, collaborator.email, collaborator.cpf, collaborator.gender, collaborator.photo, collaborator.enabled, collaborator.permission, company.name AS company_name FROM collaborator LEFT JOIN company ON company.id = collaborator.company_id WHERE collaborator.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND collaborator.deleted_at IS NULL`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Collaborator List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
@@ -175,7 +175,7 @@ app.get(`${Config.PATH}/list/collaborator`, verifyJWT, (req, res, next) => {
 app.get(`${Config.PATH}/list/category`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT product_category.*, company.name AS company_name FROM product_category LEFT JOIN company ON company.id = product_category.company_id WHERE product_category.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
+  db.query(`SELECT product_category.*, company.name AS company_name FROM product_category LEFT JOIN company ON company.id = product_category.company_id WHERE product_category.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND product_category.deleted_at IS NULL`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Category List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
@@ -189,7 +189,7 @@ app.get(`${Config.PATH}/list/category`, verifyJWT, (req, res, next) => {
 app.get(`${Config.PATH}/list/product`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT product.*, product_category.name AS category_name, company.name AS company_name FROM product LEFT JOIN product_category ON product_category.id = product.category_id LEFT JOIN company ON company.id = product.company_id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
+  db.query(`SELECT product.*, product_category.name AS category_name, company.name AS company_name FROM product LEFT JOIN product_category ON product_category.id = product.category_id LEFT JOIN company ON company.id = product.company_id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND product.deleted_at IS NULL`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Product List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
@@ -220,7 +220,7 @@ app.get(`${Config.PATH}/list/company`, verifyJWT, (req, res, next) => {
 app.get(`${Config.PATH}/chart/product`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT name, stock FROM product WHERE enabled = 'true' AND company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' ORDER BY stock ASC LIMIT 6`, function (err, result, fields) {
+  db.query(`SELECT product.name, product_output.amount FROM product LEFT JOIN product_output ON product_output.product_id = product.id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND product.enabled = 'true' AND product.deleted_at IS NULL ORDER BY product.id ASC, product_output.amount ASC LIMIT 6`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Product List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
@@ -282,7 +282,7 @@ app.post(`${Config.PATH}/insert/category`, verifyJWT, (req, res, next) => {
 app.post(`${Config.PATH}/insert/product`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  if (!req.body.name || !req.body.description || !req.body.stock || !req.body.category || !req.body.enabled) {
+  if (!req.body.name || !req.body.description || !req.body.category || !req.body.enabled) {
     return res.status(401).send({ message: 'Invalid Data' });
   }
 
@@ -292,7 +292,7 @@ app.post(`${Config.PATH}/insert/product`, verifyJWT, (req, res, next) => {
     var photo = req.body.photo;
   }
 
-  db.query(`INSERT INTO product(name, description, photo, stock, category_id, company_id, enabled) VALUES ('${req.body.name.toUpperCase()}', '${req.body.description}', '${photo}', '${req.body.stock}', '${req.body.category}', '${tokenDecoded.company_id ?? tokenDecoded.id}', '${req.body.enabled}')`, function (err, result, fields) {
+  db.query(`INSERT INTO product(name, description, photo, category_id, company_id, enabled) VALUES ('${req.body.name.toUpperCase()}', '${req.body.description}', '${photo}', '${req.body.category}', '${tokenDecoded.company_id ?? tokenDecoded.id}', '${req.body.enabled}')`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Insert Product`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });

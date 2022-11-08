@@ -47,15 +47,6 @@
                         ></v-textarea>
                         <div class="errorMessage">{{ this.descriptionError }}</div>
 
-                        <v-text-field
-                            v-model="stock"
-                            label="Quantidade em Estoque"
-                            hide-details
-                            type="number"
-                            :readonly="this.type == 'view' ? true : false"
-                        ></v-text-field>
-                        <div class="errorMessage">{{ this.stockError }}</div>
-
                         <v-select
                             v-model="category"
                             label="Categoria do Produto"
@@ -114,7 +105,6 @@
             name          : undefined,
             description   : undefined,
             photo         : undefined,
-            stock         : undefined,
             category      : undefined,
             enabled       : 'true',
 
@@ -130,7 +120,6 @@
     
             nameError       : undefined,
             descriptionError: undefined,
-            stockError      : undefined,
             photoError      : undefined
         }),
   
@@ -143,7 +132,6 @@
                     this.id          = this.data.id;
                     this.name        = this.data.name;
                     this.description = this.data.description;
-                    this.stock       = this.data.stock;
                     this.category    = this.data.category_id;
                     this.enabled     = this.data.enabled;
                 }
@@ -151,7 +139,6 @@
                 this.nameError        = undefined;
                 this.descriptionError = undefined;
                 this.photoError       = undefined;
-                this.stockError       = undefined;
             },
 
             name () {
@@ -162,11 +149,6 @@
             description () {
                 if (this.type == 'view') return '';
                 this.descriptionCheck();
-            },
-
-            stock () {
-                if (this.type == 'view') return '';
-                this.stockCheck();
             },
 
             enabled () {
@@ -180,7 +162,6 @@
                 this.name        = undefined;
                 this.description = undefined;
                 this.photo       = undefined;
-                this.stock       = undefined;
                 this.category    = undefined;
                 this.enabled     = 'true';
 
@@ -205,19 +186,9 @@
                 this.changeCheck();
             },
 
-            stockCheck () {
-                this.stockError = undefined;
-                if (!this.stock) {
-                    this.stockError = 'Insira a quantidade em estoque';
-                } else if (this.stock < 0) {
-                    this.stockError = 'A quantidade em estoque não pode ser um número negativo';
-                }
-                this.changeCheck();
-            },
-
             changeCheck () {
                 if (this.type != 'edit') return;
-                if (this.response.name != this.name || this.response.description != this.description || this.response.stock != this.stock || this.response.category_id != this.category || this.response.enabled != this.enabled) {
+                if (this.response.name != this.name || this.response.description != this.description || this.response.category_id != this.category || this.response.enabled != this.enabled) {
                     this.changeDisabled = false;
                 } else {
                     this.changeDisabled = true;
@@ -236,7 +207,6 @@
                         id         : this.id,
                         name       : this.name,
                         description: this.description,
-                        stock      : this.stock,
                         category   : this.category.id ?? this.category,
                         enabled    : this.enabled
                     };

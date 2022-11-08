@@ -10,7 +10,7 @@
 
     <v-row>
       <v-col cols="7">
-        <ColumnChart title="Pedidos de Produtos" seriesTitle="Quantidade" :seriesData="this.lowStock.seriesData" :categories="this.lowStock.categories"></ColumnChart>
+        <ColumnChart v-if="this.lowStock.seriesData != null" title="Pedidos de Produtos" seriesTitle="Quantidade" :seriesData="this.lowStock.seriesData" :categories="this.lowStock.categories"></ColumnChart>
       </v-col>
 
       <v-col cols="5">
@@ -48,10 +48,8 @@
 
           response.data.forEach(lowStock => {
             this.lowStock.categories.push(lowStock.name);
-            this.lowStock.seriesData.push(lowStock.stock);
+            this.lowStock.seriesData.push(lowStock.amount);
           });
-
-          console.log(this.lowStock);
         }
 
       }).catch(err => {

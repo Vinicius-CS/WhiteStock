@@ -52,7 +52,7 @@
             <td>{{ item.name }}</td>
             <td>{{ item.category_name }}</td>
             <td>{{ item.description }}</td>
-            <td>{{ item.stock }}</td>
+            <td>{{ item.amount }}</td>
             <td>{{ item.enabled == 'true' ? 'Sim' : 'Não' }}</td>
             <td>
               <v-btn
