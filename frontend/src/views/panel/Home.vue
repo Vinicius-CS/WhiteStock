@@ -10,7 +10,7 @@
 
     <v-row>
       <v-col cols="7">
-        <ColumnChart v-if="this.lowStock.seriesData != null" title="Pedidos de Produtos" seriesTitle="Quantidade" :seriesData="this.lowStock.seriesData" :categories="this.lowStock.categories"></ColumnChart>
+        <ColumnChart title="Produtos com Estoque Baixo" seriesTitle="Quantidade" :seriesData="this.lowStock.seriesData" :categories="this.lowStock.categories"></ColumnChart>
       </v-col>
 
       <v-col cols="5">
@@ -39,6 +39,9 @@
     }),
 
     async beforeMount () {
+      this.lowStock['categories'] = ['', '', '', '', '', ''];
+      this.lowStock['seriesData'] = [0, 0, 0, 0, 0, 0];
+
       const axios = require('axios').default;
 
       await axios.get(`${Config.API_URL}/chart/product`, {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {

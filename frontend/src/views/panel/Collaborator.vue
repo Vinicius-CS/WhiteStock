@@ -94,7 +94,7 @@
       </div>
 
       <ConfirmComponent v-model="showConfirmComponent" @close="showConfirmComponent = false" @confirm="deleteThis(this.deleteThisData); showConfirmComponent = false;" title="Exclusão de Colaborador" :text='"Tem certeza que deseja excluir o colaborador <b>" + this.deleteThisData.name + "</b>?"'/>
-      <CollaboratorComponent v-model="showCollaboratorComponent" @close="this.showCollaboratorComponent = false; listThis()" :show="this.showCollaboratorComponent" :data="this.dataComponent" :type="this.typeComponent"/>
+      <CollaboratorComponent v-model="showCollaboratorComponent" @close="this.showCollaboratorComponent = false" @list="listThis()" :show="this.showCollaboratorComponent" :data="this.dataComponent" :type="this.typeComponent"/>
     </div>
   </v-container>
 </template>

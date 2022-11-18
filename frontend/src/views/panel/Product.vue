@@ -98,7 +98,7 @@
       </div>
 
       <ConfirmComponent v-model="showConfirmComponent" @close="showConfirmComponent = false" @confirm="deleteThis(this.deleteThisData); showConfirmComponent = false;" title="Exclusão de Produto" :text='"Tem certeza que deseja excluir o produto <b>" + this.deleteThisData.name + "</b>?"'/>
-      <ProductComponent v-model="showProductComponent" @close="this.showProductComponent = false; listThis()" :show="this.showProductComponent" :data="this.dataComponent" :type="this.typeComponent"/>
+      <ProductComponent v-model="showProductComponent" @close="this.showProductComponent = false" @list="this.showProductComponent = false; listThis()" :show="this.showProductComponent" :data="this.dataComponent" :type="this.typeComponent"/>
     </div>
   </v-container>
 </template>

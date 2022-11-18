@@ -467,8 +467,6 @@
                 permission['company']      = [];
 
                 var dataCollaborator = undefined;
-
-                if (this.type == 'add') {
                     if (this.step) {
                         this.nameCheck();
                         this.emailCheck();
@@ -513,108 +511,26 @@
                         });
 
                         dataCollaborator = {
-                            name      : this.name,
-                            email     : this.email,
-                            password  : this.password,
-                            cpf       : this.cpf.replace(/[^0-9]/gm, ''),
-                            gender    : this.gender,
-                            enabled   : this.enabled,
-                            permission: permission
-                        };
-                        
-                        axios.post(`${Config.API_URL}/insert/collaborator`, require('qs').stringify(dataCollaborator), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
-                            if (response.status == 200) {
-                                this.$root.messageShow(`${this.gender == 'male' ? `O colaborador <b>${this.name}</b> foi ${this.type == 'add' ? 'cadastrado' : 'atualizado'}` : `A colaboradora <b>${this.name}</b> foi ${this.type == 'add' ? 'cadastrada' : 'atualizada'}`}`, 'green')
-                                this.$emit('close');
-                            }
-
-                        }).catch(err => {
-                            if (err.message) {
-                                var message = `Ocorreu um erro ao cadastrar ${this.gender == 'male' ? 'o colaborador' : 'a colaboradora'} <b>${this.name}</b>`;
-                                if (err.response.data.message == 'Invalid Data') message = 'Verifique os campos';
-                                if (err.response.data.code == 1062) message = `E-mail ou CNPJ em uso`;
-
-
-                                console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);
-                                this.$root.messageShow(message, 'red');
-                            }
-                        });
-
-                    }
-
-                } else if (this.type == 'edit') {
-                    if (this.step) {
-                        this.emailCheck();
-                        this.passwordCheck();
-                        this.cpfCheck();
-                        this.nameCheck();
-                        this.genderCheck();
-
-                        if (!this.emailError && !this.passwordError && !this.cpfError && !this.nameError && !this.genderError) {
-                            this.step = false;
-                        }
-
-                    } else {
-                        this.itemPermission.forEach(item => {
-                            if (this.collaborator.filter(permission => permission == item.key)[0] == undefined) {
-                                permission['collaborator'][item.key] = 0;
-                            } else {
-                                permission['collaborator'][item.key] = 1;
-                            }
-
-                            if (this.product.filter(permission => permission == item.key)[0] == undefined) {
-                                permission['product'][item.key] = 0;
-                            } else {
-                                permission['product'][item.key] = 1;
-                            }
-
-                            if (this.category.filter(permission => permission == item.key)[0] == undefined) {
-                                permission['category'][item.key] = 0;
-                            } else {
-                                permission['category'][item.key] = 1;
-                            }
-
-                            if (this.company.filter(permission => permission == item.key)[0] == undefined) {
-                                permission['company'][item.key] = 0;
-                            } else {
-                                permission['company'][item.key] = 1;
-                            }
-                        });
-
-                        dataCollaborator = {
                             id        : this.id,
+                            name      : this.name,
                             email     : this.email,
                             password  : this.password,
                             cpf       : this.cpf.replace(/[^0-9]/gm, ''),
-                            name      : this.name,
                             gender    : this.gender,
                             enabled   : this.enabled,
                             permission: permission
                         };
                         
-                        axios.post(`${Config.API_URL}/update/collaborator`, require('qs').stringify(dataCollaborator), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
+                        axios.post(`${Config.API_URL}/${this.type == 'add' ? 'insert' : 'update'}/collaborator`, require('qs').stringify(dataCollaborator), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
                             if (response.status == 200) {
-                                this.step     = true;
-                                this.id       = undefined;
-                                this.email    = undefined;
-                                this.password = (Math.random() + 1).toString(36).substring(6);
-                                this.cpf      = undefined;
-                                this.name     = undefined;
-                                this.gender   = undefined;
-                                this.enabled  = 'true';
-
-                                this.collaborator = [];
-                                this.product      = [];
-                                this.category     = [];
-                                this.company      = [];
-                                this.permission   = [];
-
-                                this.$emit('close', 'updated', dataCollaborator);
+                                this.$root.messageShow(`${this.gender == 'male' ? `O colaborador <b>${this.name}</b> foi ${this.type == 'add' ? 'cadastrado' : 'atualizado'}` : `A colaboradora <b>${this.name}</b> foi ${this.type == 'add' ? 'cadastrada' : 'atualizada'}`}`, 'green');
+                                this.$emit('list');
+                                this.closeDialog();
                             }
 
                         }).catch(err => {
                             if (err.message) {
-                                var message = `Ocorreu um erro ao atualizar os dados ${this.gender == 'male' ? 'do colaborador' : 'da colaboradora'} <b>${this.name}</b>`;
+                                var message = `Ocorreu um erro ao ${this.type == 'add' ? 'cadastrar' : 'atualizar'} ${this.gender == 'male' ? 'o colaborador' : 'a colaboradora'} <b>${this.name}</b>`;
                                 if (err.response.data.message == 'Invalid Data') message = 'Verifique os campos';
                                 if (err.response.data.code == 1062) message = `E-mail ou CNPJ em uso`;
 
@@ -624,10 +540,6 @@
                         });
 
                     }
-
-                } else {
-                    this.step = false;
-                }
             }
         },
     }

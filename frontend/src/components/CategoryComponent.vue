@@ -196,7 +196,8 @@
                     axios.post(`${Config.API_URL}/${this.type == 'add' ? 'insert' : 'update'}/category`, require('qs').stringify(dataCategory), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
                         if (response.status == 200) {
                             this.$root.messageShow(`A categoria <b>${this.name}</b> foi ${this.type == 'add' ? 'cadastrada' : 'atualizada'}`, 'green');
-                            this.$emit('close');
+                            this.$emit('list');
+                            this.closeDialog();
                         }
 
                     }).catch(err => {

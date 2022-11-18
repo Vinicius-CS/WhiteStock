@@ -157,7 +157,7 @@
         },
   
         methods: {
-            closeDialog () {
+            closeDialog (type) {
                 this.id          = undefined;
                 this.name        = undefined;
                 this.description = undefined;
@@ -165,7 +165,11 @@
                 this.category    = undefined;
                 this.enabled     = 'true';
 
-                this.$emit('close');
+                if (type == 'list') {
+                    this.$emit('list');
+                } else {
+                    this.$emit('close');
+                }
             },
     
             nameCheck () {
@@ -213,8 +217,9 @@
                     
                     axios.post(`${Config.API_URL}/${this.type == 'add' ? 'insert' : 'update'}/product`, require('qs').stringify(dataProduct), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
                         if (response.status == 200) {
-                            this.$root.messageShow(`O produto <b>${this.name}</b> foi ${this.type == 'add' ? 'cadastrado' : 'atualizado'}`, 'green')
-                            this.$emit('close');
+                            this.$root.messageShow(`O produto <b>${this.name}</b> foi ${this.type == 'add' ? 'cadastrado' : 'atualizado'}`, 'green');
+                            this.$emit('list');
+                            this.closeDialog();
                         }
 
                     }).catch(err => {
