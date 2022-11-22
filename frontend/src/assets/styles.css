@@ -101,6 +101,12 @@
     text-align: left;
 }
 
+.stockMessage {
+    font-size: medium;
+    text-transform: uppercase;
+    text-align: left;
+}
+
 .footer {
     position: absolute;
     bottom: -5rem;

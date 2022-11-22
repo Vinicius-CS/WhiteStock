@@ -11,7 +11,7 @@
                     <h2 v-else-if="this.type == 'edit'">Editar Produto</h2>
                     <h2 v-else>Produto</h2>
 
-                    <h3 v-if="this.type == 'add' || this.type == 'edit'">Dados da Produto</h3>
+                    <h3 v-if="this.type == 'add' || this.type == 'edit'">Dados do Produto</h3>
                 </v-card-title>
                 <v-icon
                     style="position: absolute; right: 1rem; top: 25%;"
@@ -214,7 +214,7 @@
                     axios.post(`${Config.API_URL}/${this.type == 'add' ? 'insert' : 'update'}/product`, require('qs').stringify(dataProduct), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
                         if (response.status == 200) {
                             this.$root.messageShow(`O produto <b>${this.name}</b> foi ${this.type == 'add' ? 'cadastrado' : 'atualizado'}`, 'green')
-                            this.$emit('close');
+                            this.closeDialog();
                         }
 
                     }).catch(err => {

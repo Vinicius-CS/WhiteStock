@@ -391,7 +391,7 @@
               if (response.status == 200) {
                 this.$root.messageShow('Empresa cadastrada com sucesso', 'green');
                 this.$emit('login');
-                this.$emit('close');
+                this.closeDialog();
               }
 
             }).catch(err => {

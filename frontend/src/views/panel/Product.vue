@@ -52,7 +52,7 @@
             <td>{{ item.name }}</td>
             <td>{{ item.category_name }}</td>
             <td>{{ item.description }}</td>
-            <td>{{ item.amount }}</td>
+            <td>{{ item.stock ?? '0' }}</td>
             <td>{{ item.enabled == 'true' ? 'Sim' : 'Não' }}</td>
             <td>
               <v-btn
@@ -79,6 +79,14 @@
                 color="grey"
                 @click="deleteThisData = item; showConfirmComponent = true"
               ></v-btn>
+              <v-btn
+                v-if="this.$store.getters.hasPermission('product', 'view')"
+                style="margin-left: 0.3rem; margin-right: 0.3rem;"
+                size="x-small"
+                icon="mdi-clipboard-list-outline"
+                color="grey"
+                @click="this.dataComponent = item; showOrderComponent = true; item.stock ? this.typeOrderComponent = 'edit' : this.typeOrderComponent = 'add'"
+              ></v-btn>
             </td>
           </tr>
         </tbody>
@@ -99,6 +107,7 @@
 
       <ConfirmComponent v-model="showConfirmComponent" @close="showConfirmComponent = false" @confirm="deleteThis(this.deleteThisData); showConfirmComponent = false;" title="Exclusão de Produto" :text='"Tem certeza que deseja excluir o produto <b>" + this.deleteThisData.name + "</b>?"'/>
       <ProductComponent v-model="showProductComponent" @close="this.showProductComponent = false; listThis()" :show="this.showProductComponent" :data="this.dataComponent" :type="this.typeComponent"/>
+      <OrderComponent v-model="showOrderComponent" @close="this.showOrderComponent = false; listThis()" :show="this.showOrderComponent" :data="this.dataComponent" :type="this.typeOrderComponent"/>
     </div>
   </v-container>
 </template>
@@ -108,13 +117,15 @@
     import Config from '@/assets/config.json';
     import ConfirmComponent from '@/components/ConfirmComponent.vue';
     import ProductComponent from '@/components/ProductComponent.vue';
+    import OrderComponent from '@/components/OrderComponent.vue';
 
     export default {
       name: 'ProductPanel',
 
       components: {
         ConfirmComponent,
-        ProductComponent
+        ProductComponent,
+        OrderComponent
       },
   
       data: () => ({
@@ -123,9 +134,11 @@
         perPage             : 15,
         showConfirmComponent: false,
         showProductComponent: false,
+        showOrderComponent  : false,
 
-        dataComponent: [],
-        typeComponent: undefined,
+        dataComponent      : [],
+        typeComponent      : undefined,
+        typeOrderComponent : undefined,
 
         dataAll  : [],
         tableData: [],

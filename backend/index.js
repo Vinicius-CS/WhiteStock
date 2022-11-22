@@ -302,6 +302,35 @@ app.post(`${Config.PATH}/insert/product`, verifyJWT, (req, res, next) => {
   });
 });
 
+app.post(`${Config.PATH}/insert/product/stock`, verifyJWT, (req, res, next) => {
+  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
+
+  if (!req.body.id || !req.body.stock) {
+    return res.status(401).send({ message: 'Invalid Data' });
+  }
+
+  if (req.body.stock > 0) {
+    db.query(`INSERT INTO product_order(amount, product_id, company_id) VALUES ('${req.body.stock}', '${req.body.id}', '${tokenDecoded.company_id ?? tokenDecoded.id}')`, function (err, result, fields) {
+      if (err) {
+        console.error({ info: `Error Insert Product`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
+        return res.status(500).send({ message: 'Server Error', code: err.errno });
+      }
+      
+      return res.status(200).send({ message: 'Inserted' });
+    });
+
+  } else if (req.body.stock < 0) {
+    db.query(`INSERT INTO product(name, description, photo, category_id, company_id, enabled) VALUES ('${req.body.name.toUpperCase()}', '${req.body.description}', '${photo}', '${req.body.category}', '${tokenDecoded.company_id ?? tokenDecoded.id}', '${req.body.enabled}')`, function (err, result, fields) {
+      if (err) {
+        console.error({ info: `Error Insert Product`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
+        return res.status(500).send({ message: 'Server Error', code: err.errno });
+      }
+      
+      return res.status(200).send({ message: 'Inserted' });
+    });
+  }
+});
+
 /*-------------------- UPDATE --------------------*/
 
 app.post(`${Config.PATH}/update/collaborator`, verifyJWT, (req, res, next) => {
@@ -347,7 +376,7 @@ app.post(`${Config.PATH}/update/category`, verifyJWT, (req, res, next) => {
 app.post(`${Config.PATH}/update/product`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  if (!req.body.id || !req.body.name || !req.body.description || !req.body.stock || !req.body.category || !req.body.enabled) {
+  if (!req.body.id || !req.body.name || !req.body.description || !req.body.category || !req.body.enabled) {
     return res.status(401).send({ message: 'Invalid Data' });
   }
 
@@ -357,7 +386,7 @@ app.post(`${Config.PATH}/update/product`, verifyJWT, (req, res, next) => {
     description = description.replace(/\s$/, '')
   }
 
-  db.query(`UPDATE product SET name = '${req.body.name.toUpperCase()}', description = '${description}', stock = '${req.body.stock}', category_id = '${req.body.category}', enabled = '${req.body.enabled}' WHERE company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND id = ${req.body.id}`, function (err, result, fields) {
+  db.query(`UPDATE product SET name = '${req.body.name.toUpperCase()}', description = '${description}', category_id = '${req.body.category}', enabled = '${req.body.enabled}' WHERE company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND id = ${req.body.id}`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Update Product`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
