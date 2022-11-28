@@ -1,6 +1,6 @@
 {
     "PROTOCOL": "http://",
-    "HOST": "10.150.48.27",
+    "HOST": "localhost",
     "PATH": "",
     "DOMAIN": ".com",
     "SITE_NAME": "White Stock"

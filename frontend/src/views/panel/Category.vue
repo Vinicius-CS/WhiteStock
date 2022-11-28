@@ -90,7 +90,7 @@
       </div>
 
       <ConfirmComponent v-model="showConfirmComponent" @close="showConfirmComponent = false" @confirm="deleteThis(this.deleteThisData); showConfirmComponent = false;" title="Exclusão de Categoria" :text='"Tem certeza que deseja excluir a categoria <b>" + this.deleteThisData.name + "</b>?"'/>
-      <CategoryComponent v-model="showCategoryComponent" @close="this.showCategoryComponent = false; listThis()" :show="this.showCategoryComponent" :data="this.dataComponent" :type="this.typeComponent"/>
+      <CategoryComponent v-model="showCategoryComponent" @close="this.showCategoryComponent = false" @list="listThis()" :show="this.showCategoryComponent" :data="this.dataComponent" :type="this.typeComponent"/>
     </div>
   </v-container>
 </template>

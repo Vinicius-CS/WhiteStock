@@ -157,7 +157,7 @@
         },
   
         methods: {
-            closeDialog () {
+            closeDialog (type) {
                 this.id          = undefined;
                 this.name        = undefined;
                 this.description = undefined;
@@ -165,7 +165,11 @@
                 this.category    = undefined;
                 this.enabled     = 'true';
 
-                this.$emit('close');
+                if (type == 'list') {
+                    this.$emit('list');
+                } else {
+                    this.$emit('close');
+                }
             },
     
             nameCheck () {

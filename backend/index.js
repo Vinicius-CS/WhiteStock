@@ -161,7 +161,7 @@ app.post(`${Config.PATH}/register`, (req, res, next) => {
 app.get(`${Config.PATH}/list/collaborator`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT collaborator.id, collaborator.name, collaborator.email, collaborator.cpf, collaborator.gender, collaborator.photo, collaborator.enabled, collaborator.permission, company.name AS company_name FROM collaborator LEFT JOIN company ON company.id = collaborator.company_id WHERE collaborator.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND collaborator.deleted_at IS NULL`, function (err, result, fields) {
+  db.query(`SELECT id, name, email, cpf, gender, photo, enabled, permission FROM collaborator WHERE company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND deleted_at IS NULL`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Collaborator List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
@@ -175,7 +175,7 @@ app.get(`${Config.PATH}/list/collaborator`, verifyJWT, (req, res, next) => {
 app.get(`${Config.PATH}/list/category`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT product_category.*, company.name AS company_name FROM product_category LEFT JOIN company ON company.id = product_category.company_id WHERE product_category.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND product_category.deleted_at IS NULL`, function (err, result, fields) {
+  db.query(`SELECT * FROM product_category WHERE company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND deleted_at IS NULL`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Category List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
@@ -189,14 +189,31 @@ app.get(`${Config.PATH}/list/category`, verifyJWT, (req, res, next) => {
 app.get(`${Config.PATH}/list/product`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT product.*, product_category.name AS category_name, company.name AS company_name FROM product LEFT JOIN product_category ON product_category.id = product.category_id LEFT JOIN company ON company.id = product.company_id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND product.deleted_at IS NULL`, function (err, result, fields) {
+  db.query(`SELECT product.*, product_category.name AS category_name FROM product LEFT JOIN product_category ON product_category.id = product.category_id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND product.deleted_at IS NULL`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Product List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
     }
 
     if (result.length <= 0) return res.status(204).send();
-    return res.status(200).send(result);
+
+    for (let i = 0; i < result.length; i++) {
+      db.query(`SELECT id, amount, delivered_at, created_at FROM product_order WHERE product_id = '${result[i].id}' AND company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND deleted_at IS NULL`, function (err, result_order, fields) {
+        if (err) {
+          console.error({ info: `Error Product List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
+          return res.status(500).send({ message: 'Server Error', code: err.errno });
+        }
+    
+        result[i]['product_order'] = result_order;
+
+        if (i == result.length - 1) {
+          if (result.length <= 0) return res.status(204).send();
+          return res.status(200).send(result);
+        }
+      });
+    }
+
+    //return res.status(200).send(result);
   });
 });
 

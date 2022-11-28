@@ -75,19 +75,23 @@ CREATE TABLE IF NOT EXISTS product_order (
   id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   amount INT NOT NULL DEFAULT 0,
   product_id INT(11) NOT NULL,
+  company_id INT(11) NOT NULL,
   delivered_at DATETIME,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   deleted_at DATETIME,
-  FOREIGN KEY (product_id) REFERENCES product(id)
+  FOREIGN KEY (product_id) REFERENCES product(id),
+  FOREIGN KEY (company_id) REFERENCES company(id)
 );
 
 CREATE TABLE IF NOT EXISTS product_output (
   id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   amount INT NOT NULL DEFAULT 0,
   product_id INT(11) NOT NULL,
+  company_id INT(11) NOT NULL,
   bought_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (product_id) REFERENCES product(id)
+  FOREIGN KEY (product_id) REFERENCES product(id),
+  FOREIGN KEY (company_id) REFERENCES company(id)
 );
 
 INSERT INTO plan (name, description, month_price, year_price, enabled) VALUES ('Start', 'Ideal para pequenas empresas.', '49.99', '539.89', 'true'), ('Lite', 'Ideal para médias empresas.', '69.99', '671.89', 'true'), ('Pro', 'Ideal para grandes empresas.', '89.99', '755.89', 'true');
