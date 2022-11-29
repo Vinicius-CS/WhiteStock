@@ -10,12 +10,16 @@
 
     <v-row>
       <v-col cols="7">
-        <ColumnChart title="Produtos com Estoque Baixo" seriesTitle="Quantidade" :seriesData="this.lowStock.seriesData" :categories="this.lowStock.categories"></ColumnChart>
+        <ColumnChart v-if="this.lowStock.seriesData.length > 0" title="Produtos com Estoque Baixo" seriesTitle="Quantidade" :seriesData="this.lowStock.seriesData" :categories="this.lowStock.categories"></ColumnChart>
+        <ColumnChart v-else title="Produtos com Estoque Baixo" seriesTitle="Quantidade" :seriesData="this.lowStock.seriesData" :categories="this.lowStock.categories"></ColumnChart>
       </v-col>
 
       <v-col cols="5">
-        <LineChart title="Pedidos de Produtos" seriesTitle="Quantidade" :seriesData="[69, 30, 22, 56, 59, 46]" :categories="['29/10/2022', '30/10/2022', '31/10/2022', '01/11/2022', '02/11/2022', '03/11/2022', '04/11/2022']"></LineChart>
-        <LineChart title="Saída de Produtos" seriesTitle="Quantidade" :seriesData="[69, 30, 22, 56, 59, 46]" :categories="['29/10/2022', '30/10/2022', '31/10/2022', '01/11/2022', '02/11/2022', '03/11/2022', '04/11/2022']"></LineChart>
+        <LineChart v-if="this.orderProduct.seriesData.length > 0" title="Pedidos de Produtos" seriesTitle="Quantidade" :seriesData="this.orderProduct.seriesData" :categories="this.orderProduct.categories"></LineChart>
+        <LineChart v-else title="Pedidos de Produtos" seriesTitle="Quantidade" :seriesData="this.orderProduct.seriesData" :categories="this.orderProduct.categories"></LineChart>
+
+        <LineChart v-if="this.outputProduct.seriesData.length > 0" title="Saída de Produtos" seriesTitle="Quantidade" :seriesData="this.outputProduct.seriesData" :categories="this.outputProduct.categories"></LineChart>
+        <LineChart v-else title="Saída de Produtos" seriesTitle="Quantidade" :seriesData="this.outputProduct.seriesData" :categories="this.outputProduct.categories"></LineChart>
       </v-col>
     </v-row>
   </v-container>
@@ -35,32 +39,58 @@
     },
 
     data: () => ({
-      lowStock: []
+      lowStock: {
+        categories: ['', '', '', '', '', ''],
+        seriesData: []
+      },
+
+      orderProduct: {
+        categories: ['', '', '', '', '', ''],
+        seriesData: []
+      },
+
+      outputProduct: {
+        categories: ['', '', '', '', '', ''],
+        seriesData: []
+      }
     }),
 
-    async beforeMount () {
-      this.lowStock['categories'] = ['', '', '', '', '', ''];
-      this.lowStock['seriesData'] = [0, 0, 0, 0, 0, 0];
+    methods: {
+      async chartLoad () {
+        const axios = require('axios').default;
 
-      const axios = require('axios').default;
+        await axios.get(`${Config.API_URL}/chart/product`, {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
+          if (response.status == 200) {
+            this.lowStock['categories'] = [];
+            this.lowStock['seriesData'] = [];
 
-      await axios.get(`${Config.API_URL}/chart/product`, {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
-        if (response.status == 200) {
-          this.lowStock['categories'] = [];
-          this.lowStock['seriesData'] = [];
+            response.data['LowStock'].forEach(lowStock => {
+              this.lowStock.categories.push(lowStock.name);
+              this.lowStock.seriesData.push(lowStock.product_amount);
+            });
 
-          response.data.forEach(lowStock => {
-            this.lowStock.categories.push(lowStock.name);
-            this.lowStock.seriesData.push(lowStock.amount);
-          });
-        }
+            response.data['OrderProduct'].forEach(orderProduct => {
+              this.orderProduct.categories.push(orderProduct.name);
+              this.orderProduct.seriesData.push(orderProduct.product_amount);
+            });
 
-      }).catch(err => {
-        if (err.message) {
-          console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);
-          this.$root.messageShow(`Ocorreu um erro ao consultar as informações`, 'red');
-        }
-      });
+            response.data['OutputProduct'].forEach(outputProduct => {
+              this.outputProduct.categories.push(outputProduct.name);
+              this.outputProduct.seriesData.push(outputProduct.product_amount);
+            });
+          }
+
+        }).catch(err => {
+          if (err.message) {
+            console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response}`  : '') + `\nRota: ${err.config.url}`);
+            this.$root.messageShow(`Ocorreu um erro ao consultar as informações`, 'red');
+          }
+        });
+      }
+    },
+
+    beforeMount () {
+      this.chartLoad();
 
       const d = new Date();
       d.setDate(d.getDate() + 1);

@@ -237,14 +237,35 @@ app.get(`${Config.PATH}/list/company`, verifyJWT, (req, res, next) => {
 app.get(`${Config.PATH}/chart/product`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT product.name, product_output.amount FROM product LEFT JOIN product_output ON product_output.product_id = product.id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND product.enabled = 'true' AND product.deleted_at IS NULL ORDER BY product.id ASC, product_output.amount ASC LIMIT 6`, function (err, result, fields) {
+  db.query(`SELECT id, name, order_amount, output_amount FROM product LEFT JOIN (SELECT product_id, SUM(amount) as order_amount FROM product_order WHERE deleted_at IS NULL GROUP BY product_id) AS product_order ON product_order.product_id = product.id LEFT JOIN (SELECT product_id, SUM(amount) as output_amount FROM product_output GROUP BY product_id) AS product_output ON product_output.product_id = product.id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' ORDER BY product.id ASC LIMIT 6`, function (err, lowStock, fields) {
     if (err) {
-      console.error({ info: `Error Product List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
+      console.error({ info: `Error Chart List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
     }
 
-    if (result.length <= 0) return res.status(204).send();
-    return res.status(200).send(result);
+    if (lowStock.length > 0) {
+      lowStock.forEach(product => {
+        product['order_amount'] = (product.order_amount ?? 0);
+        product['output_amount'] = (product.output_amount ?? 0);
+        product['product_amount'] = product['order_amount'] - product['output_amount'];
+      });
+    }
+
+    db.query(`SELECT product.id, product.name, SUM(product_order.amount) AS product_amount FROM product_order LEFT JOIN product ON product.id = product_order.product_id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND product_order.delivered_at IS NULL AND product_order.deleted_at IS NULL GROUP BY product_order.product_id ORDER BY product_order.updated_at LIMIT 6`, function (err, orderProduct, fields) {
+      if (err) {
+        console.error({ info: `Error Chart List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
+        return res.status(500).send({ message: 'Server Error', code: err.errno });
+      }
+
+      db.query(`SELECT product.id, product.name, SUM(product_output.amount) AS product_amount FROM product_output LEFT JOIN product ON product.id = product_output.product_id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' GROUP BY product_output.product_id ORDER BY product_output.bought_at LIMIT 6`, function (err, outputProduct, fields) {
+        if (err) {
+          console.error({ info: `Error Chart List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
+          return res.status(500).send({ message: 'Server Error', code: err.errno });
+        }
+    
+        return res.status(200).send({LowStock: lowStock, OrderProduct: orderProduct, OutputProduct: outputProduct});
+      });
+    });
   });
 });
 
