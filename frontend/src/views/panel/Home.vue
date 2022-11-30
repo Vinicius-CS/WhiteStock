@@ -3,7 +3,7 @@
     <v-row class="text-center">
       <v-col class="mb-4">
         <h1 class="display-2 font-weight-bold mb-3">
-          Bem vindo(a) à White Stock
+          BEM VIND{{this.$store.getters.userData.gender == 'male' ? 'O' : this.$store.getters.userData.gender == 'female' ? 'A' : 'O(A)'}} À <span style="color: #5CFFA6">{{(this.$store.getters.userData.company_name ?? this.$store.getters.userData.name)}}</span>
         </h1>
       </v-col>
     </v-row>
@@ -63,17 +63,20 @@
           if (response.status == 200) {
             this.lowStock['categories'] = [];
             this.lowStock['seriesData'] = [];
-
             response.data['LowStock'].forEach(lowStock => {
               this.lowStock.categories.push(lowStock.name);
               this.lowStock.seriesData.push(lowStock.product_amount);
             });
 
+            this.orderProduct['categories'] = [];
+            this.orderProduct['seriesData'] = [];
             response.data['OrderProduct'].forEach(orderProduct => {
               this.orderProduct.categories.push(orderProduct.name);
               this.orderProduct.seriesData.push(orderProduct.product_amount);
             });
 
+            this.outputProduct['categories'] = [];
+            this.outputProduct['seriesData'] = [];
             response.data['OutputProduct'].forEach(outputProduct => {
               this.outputProduct.categories.push(outputProduct.name);
               this.outputProduct.seriesData.push(outputProduct.product_amount);

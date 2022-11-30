@@ -75,7 +75,7 @@ app.post(`${Config.PATH}/login`, (req, res, next) => {
     return res.status(401).send({ message: 'Invalid Data' });
   }
 
-  db.query(`SELECT * FROM collaborator WHERE enabled = 'true' AND deleted_at IS NULL AND email = '${req.body.email.toLowerCase()}' AND password = MD5('${req.body.password}')`, function (err, result, fields) {
+  db.query(`SELECT collaborator.*, company.name as company_name FROM collaborator LEFT JOIN company ON company.id = collaborator.company_id WHERE collaborator.enabled = 'true' AND collaborator.deleted_at IS NULL AND collaborator.email = '${req.body.email.toLowerCase()}' AND collaborator.password = MD5('${req.body.password}')`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Login`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error' });
@@ -114,16 +114,18 @@ app.post(`${Config.PATH}/login`, (req, res, next) => {
       
       var id            = result[0]['id'];
       var name          = result[0]['name'];
+      var gender        = result[0]['gender'];
       var email         = result[0]['email'];
       var cpf           = result[0]['cnpj'];
-      var gender        = result[0]['address'];
+      var address       = result[0]['address'];
       var photo         = result[0]['photo'];
       var company_id    = result[0]['company_id'];
+      var company_name  = result[0]['company_name'];
       var enabled       = result[0]['enabled'];
       const permission  = JSON.parse(result[0].permission);
       var PrivateKey    = fs.readFileSync('./settings/private.key', 'utf8');
 
-      var Token = jwt.sign({ id, name, email, cpf, gender, photo, company_id, enabled, permission }, PrivateKey, {
+      var Token = jwt.sign({ id, name, gender, address, email, cpf, photo, company_id, company_name, enabled, permission }, PrivateKey, {
         expiresIn: TOKEN_EXPIRES,
         algorithm: 'RS256'
       });
@@ -189,7 +191,7 @@ app.get(`${Config.PATH}/list/category`, verifyJWT, (req, res, next) => {
 app.get(`${Config.PATH}/list/product`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT product.*, product_category.name AS category_name FROM product LEFT JOIN product_category ON product_category.id = product.category_id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND product.deleted_at IS NULL`, function (err, result, fields) {
+  db.query(`SELECT product.*, product_category.name AS category_name, IFNULL(order_amount, 0) AS order_amount, IFNULL(output_amount, 0) AS output_amount, (IFNULL(order_amount, 0) - IFNULL(output_amount, 0)) AS product_amount FROM product LEFT JOIN product_category ON product_category.id = product.category_id LEFT JOIN (SELECT product_id, SUM(amount) as order_amount FROM product_order WHERE deleted_at IS NULL GROUP BY product_id) AS product_order ON product_order.product_id = product.id LEFT JOIN (SELECT product_id, SUM(amount) as output_amount FROM product_output GROUP BY product_id) AS product_output ON product_output.product_id = product.id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND product.deleted_at IS NULL`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Product List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
@@ -237,27 +239,19 @@ app.get(`${Config.PATH}/list/company`, verifyJWT, (req, res, next) => {
 app.get(`${Config.PATH}/chart/product`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT id, name, order_amount, output_amount FROM product LEFT JOIN (SELECT product_id, SUM(amount) as order_amount FROM product_order WHERE deleted_at IS NULL GROUP BY product_id) AS product_order ON product_order.product_id = product.id LEFT JOIN (SELECT product_id, SUM(amount) as output_amount FROM product_output GROUP BY product_id) AS product_output ON product_output.product_id = product.id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' ORDER BY product.id ASC LIMIT 6`, function (err, lowStock, fields) {
+  db.query(`SELECT id, name, IFNULL(order_amount, 0) AS order_amount, IFNULL(output_amount, 0) AS output_amount, (IFNULL(order_amount, 0) - IFNULL(output_amount, 0)) as product_amount FROM product LEFT JOIN (SELECT product_id, SUM(amount) as order_amount FROM product_order WHERE deleted_at IS NULL GROUP BY product_id) AS product_order ON product_order.product_id = product.id LEFT JOIN (SELECT product_id, SUM(amount) as output_amount FROM product_output GROUP BY product_id) AS product_output ON product_output.product_id = product.id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' ORDER BY product.id ASC LIMIT 6`, function (err, lowStock, fields) {
     if (err) {
       console.error({ info: `Error Chart List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
     }
 
-    if (lowStock.length > 0) {
-      lowStock.forEach(product => {
-        product['order_amount'] = (product.order_amount ?? 0);
-        product['output_amount'] = (product.output_amount ?? 0);
-        product['product_amount'] = product['order_amount'] - product['output_amount'];
-      });
-    }
-
-    db.query(`SELECT product.id, product.name, SUM(product_order.amount) AS product_amount FROM product_order LEFT JOIN product ON product.id = product_order.product_id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND product_order.delivered_at IS NULL AND product_order.deleted_at IS NULL GROUP BY product_order.product_id ORDER BY product_order.updated_at LIMIT 6`, function (err, orderProduct, fields) {
+    db.query(`SELECT product.id, product.name, IFNULL(SUM(product_order.amount), 0) AS product_amount FROM product_order LEFT JOIN product ON product.id = product_order.product_id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND product_order.delivered_at IS NULL AND product_order.deleted_at IS NULL GROUP BY product_order.product_id ORDER BY product_order.updated_at LIMIT 6`, function (err, orderProduct, fields) {
       if (err) {
         console.error({ info: `Error Chart List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
         return res.status(500).send({ message: 'Server Error', code: err.errno });
       }
 
-      db.query(`SELECT product.id, product.name, SUM(product_output.amount) AS product_amount FROM product_output LEFT JOIN product ON product.id = product_output.product_id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' GROUP BY product_output.product_id ORDER BY product_output.bought_at LIMIT 6`, function (err, outputProduct, fields) {
+      db.query(`SELECT product.id, product.name, IFNULL(SUM(product_output.amount), 0) AS product_amount FROM product_output LEFT JOIN product ON product.id = product_output.product_id WHERE product.company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' GROUP BY product_output.product_id ORDER BY product_output.bought_at LIMIT 6`, function (err, outputProduct, fields) {
         if (err) {
           console.error({ info: `Error Chart List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
           return res.status(500).send({ message: 'Server Error', code: err.errno });
@@ -348,7 +342,7 @@ app.post(`${Config.PATH}/insert/product/stock`, verifyJWT, (req, res, next) => {
   }
 
   if (req.body.stock > 0) {
-    db.query(`INSERT INTO product_order(amount, product_id, company_id) VALUES ('${req.body.stock}', '${req.body.id}', '${tokenDecoded.company_id ?? tokenDecoded.id}')`, function (err, result, fields) {
+    db.query(`INSERT INTO product_order(amount, product_id, company_id) VALUES ('${req.body.stock.replace(/\D/gm, '')}', '${req.body.id}', '${tokenDecoded.company_id ?? tokenDecoded.id}')`, function (err, result, fields) {
       if (err) {
         console.error({ info: `Error Insert Product`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
         return res.status(500).send({ message: 'Server Error', code: err.errno });
@@ -358,13 +352,13 @@ app.post(`${Config.PATH}/insert/product/stock`, verifyJWT, (req, res, next) => {
     });
 
   } else if (req.body.stock < 0) {
-    db.query(`INSERT INTO product(name, description, photo, category_id, company_id, enabled) VALUES ('${req.body.name.toUpperCase()}', '${req.body.description}', '${photo}', '${req.body.category}', '${tokenDecoded.company_id ?? tokenDecoded.id}', '${req.body.enabled}')`, function (err, result, fields) {
+    db.query(`INSERT INTO product_output(amount,product_id, company_id) VALUES ('${req.body.stock.replace(/\D/gm, '')}', '${req.body.id}', '${tokenDecoded.company_id ?? tokenDecoded.id}')`, function (err, result, fields) {
       if (err) {
-        console.error({ info: `Error Insert Product`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
+        console.error({ info: `Error Remove Product`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
         return res.status(500).send({ message: 'Server Error', code: err.errno });
       }
       
-      return res.status(200).send({ message: 'Inserted' });
+      return res.status(200).send({ message: 'Removed' });
     });
   }
 });

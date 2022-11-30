@@ -29,12 +29,12 @@
                             v-model="stock"
                             label="Quantidade"
                             hide-details
-                            type="number"
+                            @keypress="isNumber($event)"
                         ></v-text-field>
                         <div class="errorMessage">{{ this.stockError }}</div>
 
-                        <div class="stockMessage">Quantidade Atual: {{ parseInt(Number.isInteger(parseInt(this.data.stock)) ? this.data.stock : 0) }}</div>
-                        <div class="stockMessage">Quantidade Total: {{ parseInt(Number.isInteger(parseInt(this.data.stock)) ? this.data.stock : 0) + parseInt(Number.isInteger(parseInt(this.stock)) ? this.stock : 0) }}</div>
+                        <div class="stockMessage">Quantidade Atual: {{ parseInt(Number.isInteger(parseInt(this.data.product_amount)) ? this.data.product_amount : 0) }}</div>
+                        <div class="stockMessage">Quantidade Total: {{ this.stockError && this.stockError == 'Insira apenas números ou um único hífen (-) no início para repesentar a retirada de produtos' ? (this.data.product_amount ?? 0) : parseInt(Number.isInteger(parseInt(this.data.product_amount)) ? this.data.product_amount : 0) + parseInt(Number.isInteger(parseInt(this.stock)) ? this.stock : 0) }}</div>
                     </div>
 
                     <div class="text-right">
@@ -43,9 +43,9 @@
                             class="btn btn_hover_0"
                             append-icon="mdi-chevron-double-right"
                             @click="register"
-                            :disabled="this.type == 'edit' ? this.changeDisabled : false"
+                            :disabled="this.changeDisabled"
                         >
-                            {{ this.type == 'add' ? 'Inserir' : 'Salvar' }}
+                            {{ 'Salvar' }}
                         </v-btn>
                     </div>
                 </v-form>
@@ -74,7 +74,6 @@
             id            : undefined,
             stock         : undefined,
 
-            response      : undefined,
             changeDisabled: true,
     
             stockError: undefined
@@ -82,12 +81,6 @@
   
         watch: {
             show () {
-                if (this.show && (this.type == 'view' || this.type == 'edit')) {
-                    this.response = this.data;
-                    this.id       = this.data.id;
-                    this.stock    = this.data.stock;
-                }
-
                 this.stockError = undefined;
             },
 
@@ -97,6 +90,16 @@
         },
   
         methods: {
+            isNumber: function(evt) {
+                evt = (evt) ? evt : window.event;
+                var charCode = (evt.which) ? evt.which : evt.keyCode;
+                if ((charCode > 31 && (charCode < 48 || charCode > 57)) && charCode !== 45) {
+                    evt.preventDefault();
+                } else {
+                    return true;
+                }
+            },
+
             closeDialog () {
                 this.id    = undefined;
                 this.stock = undefined;
@@ -106,15 +109,16 @@
     
             stockCheck () {
                 this.stockError = undefined;
+
+                if (this.stock && this.stock.match(/(.-)|(-{2,})/gm)) this.stockError = 'Insira apenas números ou um único hífen (-) no início para repesentar a retirada de produtos';
                 if (this.stock == 0) this.stockError = 'A quantidade deve ser maior ou menor que 0';
                 if (!this.stock) this.stockError = 'Insira a quantidade que você deseja acrescentar ou remover no estoque';
-                if (parseInt(Number.isInteger(parseInt(this.data.stock)) ? this.data.stock : 0) + parseInt(Number.isInteger(parseInt(this.stock)) ? this.stock : 0) < 0) this.stockError = 'A quantidade total não pode ser negativa';
+                if (parseInt(Number.isInteger(parseInt(this.data.product_amount)) ? this.data.product_amount : 0) + parseInt(Number.isInteger(parseInt(this.stock)) ? this.stock : 0) < 0) this.stockError = 'A quantidade total não pode ser negativa, você não possui estoque suficiente';
                 this.changeCheck();
             },
 
             changeCheck () {
-                if (this.type != 'edit') return;
-                if (this.response.stock != this.stock) {
+                if (this.stock) {
                     this.changeDisabled = false;
                 } else {
                     this.changeDisabled = true;
@@ -123,27 +127,27 @@
 
             register () {
                 const axios = require('axios').default;
-                this.nameCheck();
-                this.descriptionCheck();
+                this.stockCheck();
+                this.changeCheck();
 
                 var dataProduct = undefined;
 
                 if (!this.stockError) {
                     dataProduct = {
-                        id   : this.id,
+                        id   : this.data.id,
                         stock: this.stock
                     };
                     
                     axios.post(`${Config.API_URL}/${this.type == 'add' ? 'insert' : 'update'}/product/stock`, require('qs').stringify(dataProduct), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
                         if (response.status == 200) {
-                            this.$root.messageShow(`O estoque do produto <b>${this.name}</b> foi ${this.type == 'add' ? 'cadastrado' : 'atualizado'}`, 'green')
+                            this.$root.messageShow(`O estoque do produto <b>${this.data.name}</b> foi atualizado`, 'green')
                             this.closeDialog();
                         }
 
                     }).catch(err => {
                         if (err.message) {
                             console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);
-                            this.$root.messageShow(`Ocorreu um erro ao ${this.type == 'add' ? 'inserir o estoque' : 'atualizar o estoque do'} produto <b>${this.name}</b>`, 'red');
+                            this.$root.messageShow(`Ocorreu um erro ao atualizar o estoque do produto <b>${this.data.name}</b>`, 'red');
                         }
                     });
 
