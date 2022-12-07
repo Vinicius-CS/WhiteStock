@@ -5,6 +5,7 @@ import CollaboratorPanel from '@/views/panel/Collaborator.vue';
 import ProductPanel from '@/views/panel/Product.vue';
 import CategoryPanel from '@/views/panel/Category.vue';
 import CompanyPanel from '@/views/panel/Company.vue';
+import AccountPanel from '@/views/panel/Account.vue';
 
 const routes = [
   {
@@ -36,6 +37,11 @@ const routes = [
     path: '/panel/company',
     name: 'company',
     component: CompanyPanel
+  },
+  {
+    path: '/panel/account',
+    name: 'account',
+    component: AccountPanel
   },
 ]
 

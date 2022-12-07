@@ -148,7 +148,7 @@ app.post(`${Config.PATH}/register`, (req, res, next) => {
     var photo = req.body.photo;
   }
 
-  db.query(`INSERT INTO company(name, email, password, cnpj, address, photo, plan, payment_type) VALUES ('${req.body.name.toUpperCase()}', '${req.body.email.toLowerCase()}', MD5('${req.body.password}'), '${req.body.cnpj}', '${req.body.address.toUpperCase()}', '${photo}', '${req.body.plan}', '${req.body.payment_type}')`, function (err, result, fields) {
+  db.query(`INSERT INTO company(name, email, password, cnpj, address, photo, plan, payment_type) VALUES ('${req.body.name.toUpperCase()}', '${req.body.email.toLowerCase()}', MD5('${req.body.password}'), '${req.body.cnpj}', '${req.body.address.toUpperCase()}', '${photo}', '${req.body.plan}', '${req.body.payment_type.toLowerCase()}')`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Register Company`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
@@ -214,23 +214,38 @@ app.get(`${Config.PATH}/list/product`, verifyJWT, (req, res, next) => {
         }
       });
     }
-
-    //return res.status(200).send(result);
   });
 });
 
-app.get(`${Config.PATH}/list/company`, verifyJWT, (req, res, next) => {
+/*-------------------- GET - DATA --------------------*/
+
+app.get(`${Config.PATH}/data/collaborator`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  db.query(`SELECT id, name, email, cnpj, address, photo, plan, payment_type, enabled FROM company WHERE id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
+  db.query(`SELECT id, name, email, cpf, gender, photo, company_id, enabled FROM collaborator WHERE id = '${tokenDecoded.id}' AND company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
     if (err) {
-      console.error({ info: `Error Company List`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
+      console.error({ info: `Error Company Data`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
     }
 
     if (result.length <= 0) return res.status(204).send();
 
-    return res.status(200).send(result);
+    return res.status(200).send(result[0]);
+  });
+});
+
+app.get(`${Config.PATH}/data/company`, verifyJWT, (req, res, next) => {
+  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
+
+  db.query(`SELECT id, name, email, cnpj, address, photo, plan, payment_type, enabled FROM company WHERE id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
+    if (err) {
+      console.error({ info: `Error Company Data`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
+      return res.status(500).send({ message: 'Server Error', code: err.errno });
+    }
+
+    if (result.length <= 0) return res.status(204).send();
+
+    return res.status(200).send(result[0]);
   });
 });
 
@@ -278,7 +293,7 @@ app.post(`${Config.PATH}/insert/collaborator`, verifyJWT, (req, res, next) => {
     var photo = req.body.photo;
   }
 
-  db.query(`INSERT INTO collaborator(name, email, password, cpf, gender, photo, company_id, enabled, permission) VALUES ('${req.body.name.toUpperCase()}', '${req.body.email.toLowerCase()}', MD5('${req.body.password}'), '${req.body.cpf}', '${req.body.gender}', '${photo}', '${tokenDecoded.company_id ?? tokenDecoded.id}', '${req.body.enabled}', '${JSON.stringify(req.body.permission)}')`, function (err, result, fields) {
+  db.query(`INSERT INTO collaborator(name, email, password, cpf, gender, photo, company_id, enabled, permission) VALUES ('${req.body.name.toUpperCase()}', '${req.body.email.toLowerCase()}', MD5('${req.body.password}'), '${req.body.cpf}', '${req.body.gender.toLowerCase()}', '${photo}', '${tokenDecoded.company_id ?? tokenDecoded.id}', '${req.body.enabled.toLowerCase()}', '${JSON.stringify(req.body.permission)}')`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Register Collaborator`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', data: errorHandlingSQL(err.errno, req.originalUrl, 'e-mail ou CNPJ') });
@@ -301,7 +316,7 @@ app.post(`${Config.PATH}/insert/category`, verifyJWT, (req, res, next) => {
     description = description.replace(/\s$/, '')
   }
 
-  db.query(`INSERT INTO product_category(name, description, company_id, enabled) VALUES ('${req.body.name.toUpperCase()}', '${description}', '${tokenDecoded.company_id ?? tokenDecoded.id}', '${req.body.enabled}')`, function (err, result, fields) {
+  db.query(`INSERT INTO product_category(name, description, company_id, enabled) VALUES ('${req.body.name.toUpperCase()}', '${description}', '${tokenDecoded.company_id ?? tokenDecoded.id}', '${req.body.enabled.toLowerCase()}')`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Insert Category`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
@@ -324,7 +339,7 @@ app.post(`${Config.PATH}/insert/product`, verifyJWT, (req, res, next) => {
     var photo = req.body.photo;
   }
 
-  db.query(`INSERT INTO product(name, description, photo, category_id, company_id, enabled) VALUES ('${req.body.name.toUpperCase()}', '${req.body.description}', '${photo}', '${req.body.category}', '${tokenDecoded.company_id ?? tokenDecoded.id}', '${req.body.enabled}')`, function (err, result, fields) {
+  db.query(`INSERT INTO product(name, description, photo, category_id, company_id, enabled) VALUES ('${req.body.name.toUpperCase()}', '${req.body.description}', '${photo}', '${req.body.category}', '${tokenDecoded.company_id ?? tokenDecoded.id}', '${req.body.enabled.toLowerCase()}')`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Insert Product`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
@@ -365,14 +380,52 @@ app.post(`${Config.PATH}/insert/product/stock`, verifyJWT, (req, res, next) => {
 
 /*-------------------- UPDATE --------------------*/
 
-app.post(`${Config.PATH}/update/collaborator`, verifyJWT, (req, res, next) => {
+app.post(`${Config.PATH}/update/company`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  if (!req.body.id || !req.body.name || !req.body.email || !req.body.cpf || !req.body.gender || !req.body.enabled) {
+  if (req.body.name == undefined && req.body.email == undefined && req.body.password == undefined && req.body.cnpj == undefined && req.body.address == undefined && req.body.photo == undefined && req.body.plan == undefined && req.body.payment_type == undefined && req.body.enabled == undefined) {
     return res.status(401).send({ message: 'Invalid Data' });
   }
 
-  db.query(`UPDATE collaborator SET name = '${req.body.name.toUpperCase()}', email = '${req.body.email.toLowerCase()}', ${req.body.password != undefined ? "password = MD5('" + req.body.password + "'), " : ''}cpf = '${req.body.cpf}', gender = '${req.body.gender}', enabled = '${req.body.enabled}', permission = '${JSON.stringify(req.body.permission)}' WHERE company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND id = ${req.body.id}`, function (err, result, fields) {
+  const fields = [];
+  if (req.body.name != undefined) fields.push(`name = '${req.body.name.toUpperCase()}'`);
+  if (req.body.email != undefined) fields.push(`email = '${req.body.email.toLowerCase()}'`);
+  if (req.body.password != undefined) fields.push(`password = MD5('${req.body.password}')`);
+  if (req.body.cnpj != undefined) fields.push(`cnpj = '${req.body.cnpj}'`);
+  if (req.body.address) fields.push(`address = '${req.body.address.toUpperCase()}'`);
+  if (req.body.photo != undefined) fields.push(`photo = '${req.body.photo}'`);
+  if (req.body.plan != undefined) fields.push(`plan = '${req.body.plan}'`);
+  if (req.body.payment_type != undefined) fields.push(`payment_type = '${req.body.payment_type.toLowerCase()}'`);
+  if (req.body.enabled != undefined) fields.push(`enabled = '${req.body.enabled.toLowerCase()}'`);
+
+  db.query(`UPDATE company SET ${fields.join(', ')} WHERE id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
+    if (err) {
+      console.error({ info: `Error Update Company`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
+      return res.status(500).send({ message: 'Server Error', code: err.errno });
+    }
+    
+    return res.status(200).send({ message: 'Updated' });
+  });
+});
+
+app.post(`${Config.PATH}/update/collaborator`, verifyJWT, (req, res, next) => {
+  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
+
+  if (req.body.name == undefined && req.body.email == undefined && req.body.password == undefined && req.body.cpf == undefined && req.body.gender == undefined && req.body.photo == undefined && req.body.enabled == undefined && req.body.permission == undefined) {
+    return res.status(401).send({ message: 'Invalid Data' });
+  }
+
+  const fields = [];
+  if (req.body.name != undefined) fields.push(`name = '${req.body.name.toUpperCase()}'`);
+  if (req.body.email != undefined) fields.push(`email = '${req.body.email.toLowerCase()}'`);
+  if (req.body.password != undefined) fields.push(`password = MD5('${req.body.password}')`);
+  if (req.body.cpf != undefined) fields.push(`cpf = '${req.body.cpf}'`);
+  if (req.body.gender) fields.push(`gender = '${req.body.gender.toLowerCase()}'`);
+  if (req.body.photo != undefined) fields.push(`photo = '${req.body.photo}'`);
+  if (req.body.enabled != undefined) fields.push(`enabled = '${req.body.enabled.toLowerCase()}'`);
+  if (req.body.permission != undefined) fields.push(`permission = '${JSON.stringify(req.body.permission)}'`);
+
+  db.query(`UPDATE collaborator SET ${fields.join(', ')} WHERE id = '${req.body.id ?? tokenDecoded.id}' AND company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Update Collaborator`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
@@ -385,7 +438,7 @@ app.post(`${Config.PATH}/update/collaborator`, verifyJWT, (req, res, next) => {
 app.post(`${Config.PATH}/update/category`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  if (!req.body.id || !req.body.name || !req.body.description || !req.body.enabled) {
+  if (req.body.id == undefined || (req.body.name == undefined && req.body.description == undefined && req.body.enabled == undefined)) {
     return res.status(401).send({ message: 'Invalid Data' });
   }
 
@@ -395,7 +448,12 @@ app.post(`${Config.PATH}/update/category`, verifyJWT, (req, res, next) => {
     description = description.replace(/\s$/, '')
   }
 
-  db.query(`UPDATE product_category SET name = '${req.body.name.toUpperCase()}', description = '${description}', enabled = '${req.body.enabled}' WHERE company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND id = ${req.body.id}`, function (err, result, fields) {
+  const fields = [];
+  if (req.body.name != undefined) fields.push(`name = '${req.body.name.toUpperCase()}'`);
+  if (description != undefined) fields.push(`description = '${description}'`);
+  if (req.body.enabled != undefined) fields.push(`enabled = '${req.body.enabled.toLowerCase()}'`);
+
+  db.query(`UPDATE product_category SET ${fields.join(', ')} WHERE id = '${req.body.id}' AND company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Update Category`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
@@ -408,7 +466,7 @@ app.post(`${Config.PATH}/update/category`, verifyJWT, (req, res, next) => {
 app.post(`${Config.PATH}/update/product`, verifyJWT, (req, res, next) => {
   const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
 
-  if (!req.body.id || !req.body.name || !req.body.description || !req.body.category || !req.body.enabled) {
+  if (req.body.id == undefined || (req.body.name == undefined && req.body.description == undefined && req.body.photo == undefined && req.body.category_id == undefined && req.body.enabled == undefined)) {
     return res.status(401).send({ message: 'Invalid Data' });
   }
 
@@ -418,26 +476,16 @@ app.post(`${Config.PATH}/update/product`, verifyJWT, (req, res, next) => {
     description = description.replace(/\s$/, '')
   }
 
-  db.query(`UPDATE product SET name = '${req.body.name.toUpperCase()}', description = '${description}', category_id = '${req.body.category}', enabled = '${req.body.enabled}' WHERE company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}' AND id = ${req.body.id}`, function (err, result, fields) {
+  const fields = [];
+  if (req.body.name != undefined) fields.push(`name = '${req.body.name.toUpperCase()}'`);
+  if (description != undefined) fields.push(`description = '${description}'`);
+  if (req.body.photo != undefined) fields.push(`photo = '${req.body.photo}'`);
+  if (req.body.category_id != undefined) fields.push(`category_id = '${req.body.category_id}'`);
+  if (req.body.enabled != undefined) fields.push(`enabled = '${req.body.enabled.toLowerCase()}'`);
+
+  db.query(`UPDATE product SET ${fields.join(', ')} WHERE id = '${req.body.id}' AND company_id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
     if (err) {
       console.error({ info: `Error Update Product`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
-      return res.status(500).send({ message: 'Server Error', code: err.errno });
-    }
-    
-    return res.status(200).send({ message: 'Updated' });
-  });
-});
-
-app.post(`${Config.PATH}/update/company`, verifyJWT, (req, res, next) => {
-  const tokenDecoded = decodeJWT(req.headers['x-resource-token']);
-
-  if (!req.body.name || !req.body.address || !req.body.cnpj) {
-    return res.status(401).send({ message: 'Invalid Data' });
-  }
-
-  db.query(`UPDATE company SET name = '${req.body.name.toUpperCase()}', address = '${req.body.address.toUpperCase()}', cnpj = '${req.body.cnpj}' WHERE id = '${tokenDecoded.company_id ?? tokenDecoded.id}'`, function (err, result, fields) {
-    if (err) {
-      console.error({ info: `Error Update Company`, route: req.protocol + '://' + req.get('host') + req.originalUrl, error: err });
       return res.status(500).send({ message: 'Server Error', code: err.errno });
     }
     

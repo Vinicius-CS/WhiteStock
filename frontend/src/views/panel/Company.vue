@@ -69,7 +69,6 @@
         nameCompany   : undefined,
         addressCompany: undefined,
         cnpj          : undefined,
-        email         : undefined,
 
         response      : undefined,
         changeDisabled: true,
@@ -114,7 +113,7 @@
         },
 
         changeCheck () {
-          if (this.response.name != this.nameCompany || this.response.address != this.addressCompany || this.response.cnpj != this.cnpj) {
+          if ((!this.nameCompanyError && !this.addressCompanyError && !this.cnpjError) || (this.response.name != this.nameCompany || this.response.address != this.addressCompany || this.response.cnpj != this.cnpj)) {
             this.changeDisabled = false;
           } else {
             this.changeDisabled = true;
@@ -122,15 +121,15 @@
         },
 
         async listThis () {
+          console.log(this.$store.getters.userData);
           const axios = require('axios').default;
 
-          await axios.get(`${Config.API_URL}/list/company`, {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
+          await axios.get(`${Config.API_URL}/data/company`, {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
             if (response.status == 200) {
-              this.response       = response.data[0];
-              this.nameCompany    = response.data[0].name;
-              this.addressCompany = response.data[0].address;
-              this.cnpj           = response.data[0].cnpj;
-              this.email          = response.data[0].email;
+              this.response       = response.data;
+              this.nameCompany    = response.data.name;
+              this.addressCompany = response.data.address;
+              this.cnpj           = response.data.cnpj;
             }
 
           }).catch(err => {
@@ -158,12 +157,14 @@
             
             axios.post(`${Config.API_URL}/update/company`, require('qs').stringify(dataCompany), {headers: {'Content-Type': 'application/x-www-form-urlencoded', 'x-resource-token': this.$store.state.token}}).then(response => {
               if (response.status == 200) {
+                this.changeDisabled = true;
+                this.$root.messageShow(`As alterações da empresa <b>${this.$store.getters.userData.name}</b> foram salvas`, 'green');
                 this.listThis();
               }
 
             }).catch(err => {
               if (err.message) {
-                var message = `Ocorreu um erro ao salvar as alterações da empresa <b>${this.nameCompany}</b>`;
+                var message = `Ocorreu um erro ao salvar as alterações da empresa <b>${this.$store.getters.userData.name}</b>`;
                 if (err.response.data.code == 1062) message = `CNPJ em uso`;
 
                 console.warn((err.response.data.code != undefined ? `\nCódigo de erro: ${err.response.data.code}`  : '') + `\nRota: ${err.config.url}`);

@@ -118,7 +118,7 @@
             },
 
             changeCheck () {
-                if (this.stock) {
+                if (!this.stockError) {
                     this.changeDisabled = false;
                 } else {
                     this.changeDisabled = true;
