@@ -2,7 +2,7 @@
   <v-container class="content">
     <v-layout class="header d-flex flex-column">
       <div style="text-align: center">
-        <h3>Empresa</h3>
+        <h3>Minha Conta</h3>
       </div>
     </v-layout>
 
