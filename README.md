@@ -16,6 +16,8 @@
 Projeto de gerenciamento de estoque com frontend em Vue.js 3 e Vuetify 3 para estilização e backend em Node.js.
 Para o banco de dados, foi utilizado o MySQL.
 
+![White Stock - Início](http://i.imgur.com/1dhTJ4Kh.gif)
+
 <hr>
 
 # Configurações
