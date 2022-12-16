@@ -9,7 +9,7 @@
   <img alt="Vinicius-Vue" src="https://img.shields.io/badge/Vue.js-323330?style=for-the-badge&logo=vue.js&logoColor=5CFFA6">
   <img alt="Vinicius-Vuetify" src="https://img.shields.io/badge/Vuetify-323330?style=for-the-badge&logo=vuetify&logoColor=5CFFA6">
   <img alt="Vinicius-CSS" src="https://img.shields.io/badge/CSS-323330?&style=for-the-badge&logo=css3&logoColor=5CFFA6">
-  <img alt="Vinicius-Node" src="https://img.shields.io/badge/Node-323330?style=for-the-badge&logo=node.js&logoColor=5CFFA6">
+  <img alt="Vinicius-Node" src="https://img.shields.io/badge/Node.js-323330?style=for-the-badge&logo=node.js&logoColor=5CFFA6">
   <img alt="Vinicius-MySQL" src="https://img.shields.io/badge/MySQL-323330?style=for-the-badge&logo=mysql&logoColor=5CFFA6">
 </div>
 
