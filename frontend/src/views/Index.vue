@@ -129,7 +129,7 @@
 
           item: [
             {
-              text: '50 Ilimitados',
+              text: '50 Funcionários',
               active: true
             },
             {
